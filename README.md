@@ -82,8 +82,14 @@ A API fica em
 [Automatize-Python-NailFlows](https://github.com/brunoMyguelDotCom/Automatize-Python-NailFlows).
 
 Todo acesso a dados passa pela interface `AgendaRepository`. Hoje existe uma
-implementação em memória, `AgendaRepositoryFalso`, com uma semana de exemplo. A
-implementação que chama a API entra como uma segunda classe, e a troca acontece em
+implementação em memória, `AgendaRepositoryFalso`, com uma semana de exemplo.
+
+> **`AgendaRepositoryFalso` é temporário.** Ele existe só para o painel funcionar
+> antes da API. Quando a integração acontecer, o arquivo sai e, com ele, os dados
+> de exemplo. O que permanece é a interface `AgendaRepository`, que define o que o
+> app precisa pedir.
+
+A implementação que chama a API entra como uma segunda classe, e a troca acontece em
 uma linha do `main.dart`:
 
 ```dart
