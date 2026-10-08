@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'app.dart';
 import 'dados/agenda_repository.dart';
 import 'dados/agenda_repository_falso.dart';
 import 'tema/tema.dart';
-import 'telas/agenda_page.dart';
 
 void main() {
   final AgendaRepository repositorio = AgendaRepositoryFalso();
@@ -21,7 +21,7 @@ class NailsFlowApp extends StatelessWidget {
       title: 'NailsFlow',
       debugShowCheckedModeBanner: false,
       theme: temaNailsFlow(),
-      home: AgendaPage(repositorio: repositorio),
+      home: Painel(repositorio: repositorio),
     );
   }
 }
