@@ -7,6 +7,8 @@ import '../tema/tema.dart';
 import '../util/datas.dart';
 import '../widgets/cartao_atendimento.dart';
 import '../widgets/estado_vazio.dart';
+import '../widgets/faixa_de_dias.dart';
+import 'detalhe_atendimento_page.dart';
 
 class AgendaPage extends StatefulWidget {
   const AgendaPage({super.key, required this.repositorio});
@@ -54,56 +56,41 @@ class _AgendaPageState extends State<AgendaPage> {
     }
   }
 
-  void _mudarDia(int dias) {
-    setState(() => _dia = _dia.add(Duration(days: dias)));
+  void _selecionarDia(DateTime dia) {
+    setState(() => _dia = inicioDoDia(dia));
     _carregar();
   }
 
-  void _irParaHoje() {
-    setState(() => _dia = inicioDoDia(DateTime.now()));
-    _carregar();
+  Agendamento? get _proximo {
+    if (!mesmoDia(_dia, DateTime.now())) return null;
+    final agora = DateTime.now();
+    for (final agendamento in _agendamentos) {
+      if (agendamento.ativo && agendamento.fim.isAfter(agora)) {
+        return agendamento;
+      }
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final ehHoje = mesmoDia(_dia, DateTime.now());
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agenda'),
-        actions: [
-          IconButton(
-            onPressed: _carregar,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Atualizar',
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Cabecalho(
-                dia: _dia,
-                ehHoje: ehHoje,
-                agendamentos: _agendamentos,
-                aoVoltarDia: () => _mudarDia(-1),
-                aoAvancarDia: () => _mudarDia(1),
-                aoIrParaHoje: _irParaHoje,
-              ),
-              Expanded(child: _corpo()),
-            ],
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Cabecalho(
+          dia: _dia,
+          agendamentos: _agendamentos,
+          aoSelecionarDia: _selecionarDia,
+          aoIrParaHoje: () => _selecionarDia(DateTime.now()),
         ),
-      ),
+        Expanded(child: _corpo()),
+      ],
     );
   }
 
   Widget _corpo() {
     if (_carregando) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: vinho));
     }
 
     if (_erro != null) {
@@ -125,14 +112,29 @@ class _AgendaPageState extends State<AgendaPage> {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
-      itemCount: _agendamentos.length,
-      separatorBuilder: (context, indice) => const SizedBox(height: 10),
-      itemBuilder: (context, indice) {
-        final agendamento = _agendamentos[indice];
-        return CartaoAtendimento(agendamento: agendamento, aoTocar: () {});
-      },
+    final proximo = _proximo;
+
+    return RefreshIndicator(
+      color: vinho,
+      onRefresh: _carregar,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+        itemCount: _agendamentos.length,
+        separatorBuilder: (context, indice) => const SizedBox(height: 12),
+        itemBuilder: (context, indice) {
+          final agendamento = _agendamentos[indice];
+          return CartaoAtendimento(
+            agendamento: agendamento,
+            proximo: agendamento.id == proximo?.id,
+            aoTocar: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) =>
+                    DetalheAtendimentoPage(agendamento: agendamento),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -140,76 +142,85 @@ class _AgendaPageState extends State<AgendaPage> {
 class _Cabecalho extends StatelessWidget {
   const _Cabecalho({
     required this.dia,
-    required this.ehHoje,
     required this.agendamentos,
-    required this.aoVoltarDia,
-    required this.aoAvancarDia,
+    required this.aoSelecionarDia,
     required this.aoIrParaHoje,
   });
 
   final DateTime dia;
-  final bool ehHoje;
   final List<Agendamento> agendamentos;
-  final VoidCallback aoVoltarDia;
-  final VoidCallback aoAvancarDia;
+  final ValueChanged<DateTime> aoSelecionarDia;
   final VoidCallback aoIrParaHoje;
 
   @override
   Widget build(BuildContext context) {
+    final ehHoje = mesmoDia(dia, DateTime.now());
     final ativos = agendamentos.where((a) => a.ativo).toList();
-    final total = ativos.fold<double>(0, (soma, a) => soma + (a.preco ?? 0));
+    final confirmados = ativos
+        .where((a) => a.statusConvite == StatusConvite.confirmado)
+        .length;
+    final pendentes = ativos
+        .where((a) => a.statusConvite == StatusConvite.pendente)
+        .length;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      padding: const EdgeInsets.fromLTRB(18, 16, 12, 16),
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
       decoration: BoxDecoration(
         color: rosaClaro,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: rosa),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
-              Expanded(child: Text(diaPorExtenso(dia), style: estiloTitulo())),
-              IconButton(
-                onPressed: aoVoltarDia,
-                icon: const Icon(Icons.chevron_left),
-                tooltip: 'Dia anterior',
-                color: vinho,
-              ),
-              IconButton(
-                onPressed: aoAvancarDia,
-                icon: const Icon(Icons.chevron_right),
-                tooltip: 'Próximo dia',
-                color: vinho,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  _resumo(ativos.length, total),
-                  style: const TextStyle(fontSize: 13.5, color: textoApoio),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(diaPorExtenso(dia), style: estiloTitulo()),
+                    const SizedBox(height: 4),
+                    Text(
+                      _resumo(ativos.length, confirmados, pendentes),
+                      style: const TextStyle(fontSize: 13.5, color: textoApoio),
+                    ),
+                  ],
                 ),
               ),
               if (!ehHoje)
-                TextButton(onPressed: aoIrParaHoje, child: const Text('Hoje')),
+                TextButton.icon(
+                  onPressed: aoIrParaHoje,
+                  icon: const Icon(Icons.today_rounded, size: 18),
+                  label: const Text('Hoje'),
+                  style: TextButton.styleFrom(foregroundColor: vinho),
+                ),
             ],
           ),
+          const SizedBox(height: 14),
+          FaixaDeDias(diaSelecionado: dia, aoSelecionar: aoSelecionarDia),
         ],
       ),
     );
   }
 
-  String _resumo(int quantidade, double total) {
+  String _resumo(int quantidade, int confirmados, int pendentes) {
     if (quantidade == 0) return 'Nenhum atendimento';
+
     final atendimentos = quantidade == 1
         ? '1 atendimento'
         : '$quantidade atendimentos';
-    if (total == 0) return atendimentos;
-    return '$atendimentos  ·  R\$ ${total.toStringAsFixed(2)}';
+    final detalhes = <String>[];
+    if (confirmados > 0) {
+      detalhes.add('$confirmados confirmado${confirmados > 1 ? 's' : ''}');
+    }
+    if (pendentes > 0) {
+      detalhes.add('$pendentes aguardando resposta');
+    }
+
+    if (detalhes.isEmpty) return atendimentos;
+    return '$atendimentos  ·  ${detalhes.join('  ·  ')}';
   }
 }
