@@ -1,3 +1,0 @@
-Commit feito pelo responsavel do repositorio
-
-objetivo: liberacao de acesso ao colaborador responsavel pelo desenvolvimento do software flutter
