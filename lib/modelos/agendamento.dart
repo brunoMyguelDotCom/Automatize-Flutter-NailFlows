@@ -100,7 +100,6 @@ class Agendamento {
     required this.servico,
     required this.inicio,
     required this.duracaoMinutos,
-    this.preco,
     this.observacao,
     this.situacao = SituacaoAtendimento.agendado,
     this.statusConvite = StatusConvite.pendente,
@@ -113,7 +112,6 @@ class Agendamento {
   final Servico servico;
   final DateTime inicio;
   final int duracaoMinutos;
-  final double? preco;
   final String? observacao;
   final SituacaoAtendimento situacao;
   final StatusConvite statusConvite;
@@ -133,7 +131,6 @@ class Agendamento {
       servico: Servico.fromJson(json['service'] as Map<String, dynamic>),
       inicio: DateTime.parse(json['start_time'] as String),
       duracaoMinutos: json['duration_minutes'] as int,
-      preco: (json['price'] as num?)?.toDouble(),
       observacao: json['notes'] as String?,
       situacao: SituacaoAtendimento.fromJson(
         json['appointment_status'] as String?,
@@ -154,7 +151,6 @@ class Agendamento {
       'start_time': inicio.toIso8601String(),
       'end_time': fim.toIso8601String(),
       'duration_minutes': duracaoMinutos,
-      'price': preco,
       'notes': observacao,
       'appointment_status': situacao.json,
       'sync_state': {

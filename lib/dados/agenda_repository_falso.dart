@@ -12,28 +12,24 @@ class AgendaRepositoryFalso implements AgendaRepository {
     id: 'svc_molde_f1',
     nome: 'Molde F1',
     duracaoMinutos: 150,
-    preco: 190.00,
   );
 
   static final Servico esmaltacaoGel = Servico(
     id: 'svc_esmaltacao_gel',
     nome: 'Esmaltação em gel',
     duracaoMinutos: 90,
-    preco: 120.00,
   );
 
   static final Servico blindagem = Servico(
     id: 'svc_blindagem',
     nome: 'Blindagem',
     duracaoMinutos: 60,
-    preco: 90.00,
   );
 
   static final Servico manutencao = Servico(
     id: 'svc_manutencao',
     nome: 'Manutenção de Molde F1',
     duracaoMinutos: 120,
-    preco: 150.00,
   );
 
   static final List<Cliente> _clientes = [
@@ -90,7 +86,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: moldeF1,
         inicio: em(0, 9),
         duracaoMinutos: moldeF1.duracaoMinutos,
-        preco: moldeF1.preco,
         statusConvite: StatusConvite.confirmado,
         googleEventId: 'google_a1b2c3d4',
         ultimaSincronizacao: agora.subtract(const Duration(hours: 3)),
@@ -101,7 +96,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: esmaltacaoGel,
         inicio: em(0, 12),
         duracaoMinutos: esmaltacaoGel.duracaoMinutos,
-        preco: esmaltacaoGel.preco,
         observacao: 'Levar referência da cor',
         statusConvite: StatusConvite.confirmado,
         googleEventId: 'google_b2c3d4e5',
@@ -113,7 +107,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: blindagem,
         inicio: em(0, 15),
         duracaoMinutos: blindagem.duracaoMinutos,
-        preco: blindagem.preco,
         statusConvite: StatusConvite.pendente,
         googleEventId: 'google_c3d4e5f6',
       ),
@@ -123,7 +116,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: manutencao,
         inicio: em(0, 16, 30),
         duracaoMinutos: manutencao.duracaoMinutos,
-        preco: manutencao.preco,
         statusConvite: StatusConvite.recusado,
         googleEventId: 'google_d4e5f6a7',
       ),
@@ -133,7 +125,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: moldeF1,
         inicio: em(1, 9, 30),
         duracaoMinutos: moldeF1.duracaoMinutos,
-        preco: moldeF1.preco,
         statusConvite: StatusConvite.pendente,
         googleEventId: 'google_e5f6a7b8',
       ),
@@ -143,7 +134,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: blindagem,
         inicio: em(1, 14),
         duracaoMinutos: blindagem.duracaoMinutos,
-        preco: blindagem.preco,
         statusConvite: StatusConvite.confirmado,
         googleEventId: 'google_f6a7b8c9',
       ),
@@ -153,7 +143,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: esmaltacaoGel,
         inicio: em(-1, 10),
         duracaoMinutos: esmaltacaoGel.duracaoMinutos,
-        preco: esmaltacaoGel.preco,
         situacao: SituacaoAtendimento.concluido,
         statusConvite: StatusConvite.confirmado,
         googleEventId: 'google_a7b8c9d0',
@@ -164,7 +153,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: manutencao,
         inicio: em(-1, 14),
         duracaoMinutos: manutencao.duracaoMinutos,
-        preco: manutencao.preco,
         situacao: SituacaoAtendimento.faltou,
         statusConvite: StatusConvite.confirmado,
         googleEventId: 'google_b8c9d0e1',
@@ -175,7 +163,6 @@ class AgendaRepositoryFalso implements AgendaRepository {
         servico: moldeF1,
         inicio: em(3, 9),
         duracaoMinutos: moldeF1.duracaoMinutos,
-        preco: moldeF1.preco,
         statusConvite: StatusConvite.pendente,
         googleEventId: 'google_c9d0e1f2',
       ),
