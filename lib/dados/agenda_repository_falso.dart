@@ -32,6 +32,13 @@ class AgendaRepositoryFalso implements AgendaRepository {
     duracaoMinutos: 120,
   );
 
+  static final List<Servico> catalogo = [
+    moldeF1,
+    manutencao,
+    esmaltacaoGel,
+    blindagem,
+  ];
+
   static final List<Cliente> _clientes = [
     Cliente(
       id: 'cli_maria',
@@ -189,7 +196,7 @@ class AgendaRepositoryFalso implements AgendaRepository {
   @override
   Future<List<Servico>> listarServicos() async {
     await Future.delayed(atraso);
-    return [moldeF1, manutencao, esmaltacaoGel, blindagem];
+    return catalogo;
   }
 
   @override

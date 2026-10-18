@@ -125,12 +125,21 @@ class Agendamento {
   factory Agendamento.fromJson(Map<String, dynamic> json) {
     final sync = json['sync_state'] as Map<String, dynamic>? ?? const {};
 
+    final servico = json['service'];
+    final duracao = json['duration_minutes'] as int;
+
     return Agendamento(
       id: json['id'] as String,
       cliente: Cliente.fromJson(json['client'] as Map<String, dynamic>),
-      servico: Servico.fromJson(json['service'] as Map<String, dynamic>),
+      servico: servico is Map<String, dynamic>
+          ? Servico.fromJson(servico)
+          : Servico(
+              id: servico.toString(),
+              nome: servico.toString(),
+              duracaoMinutos: duracao,
+            ),
       inicio: DateTime.parse(json['start_time'] as String),
-      duracaoMinutos: json['duration_minutes'] as int,
+      duracaoMinutos: duracao,
       observacao: json['notes'] as String?,
       situacao: SituacaoAtendimento.fromJson(
         json['appointment_status'] as String?,

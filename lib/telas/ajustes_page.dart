@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../dados/api_config.dart';
 import '../tema/cores.dart';
 
 class AjustesPage extends StatelessWidget {
@@ -12,23 +13,23 @@ class AjustesPage extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 640),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-          children: const [
-            _Grupo('Expediente'),
-            _Item(
+          children: [
+            const _Grupo('Expediente'),
+            const _Item(
               icone: Icons.calendar_month_rounded,
               titulo: 'Dias e horários de atendimento',
               detalhe: 'A combinar com a profissional',
               aDefinir: true,
             ),
-            _Item(
+            const _Item(
               icone: Icons.timer_outlined,
               titulo: 'Intervalo entre atendimentos',
               detalhe: 'A combinar com a profissional',
               aDefinir: true,
             ),
-            SizedBox(height: 22),
-            _Grupo('Integrações'),
-            _Item(
+            const SizedBox(height: 22),
+            const _Grupo('Integrações'),
+            const _Item(
               icone: Icons.event_available_rounded,
               titulo: 'Google Agenda',
               detalhe: 'Ainda não conectado',
@@ -36,13 +37,13 @@ class AjustesPage extends StatelessWidget {
             ),
             _Item(
               icone: Icons.cloud_outlined,
-              titulo: 'Servidor',
-              detalhe: 'Usando dados de exemplo no próprio navegador',
-              aDefinir: true,
+              titulo: 'Origem dos dados',
+              detalhe: ApiConfig.descricaoDaOrigem,
+              aDefinir: !ApiConfig.usarApi,
             ),
-            SizedBox(height: 22),
-            _Grupo('Sobre'),
-            _Item(
+            const SizedBox(height: 22),
+            const _Grupo('Sobre'),
+            const _Item(
               icone: Icons.info_outline_rounded,
               titulo: 'NailsFlow',
               detalhe: 'Painel de agenda · versão de desenvolvimento',
