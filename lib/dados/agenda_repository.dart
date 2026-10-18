@@ -11,4 +11,10 @@ abstract class AgendaRepository {
   Future<List<Servico>> listarServicos();
 
   Future<List<Cliente>> listarClientes();
+
+  Future<Cliente> criarCliente(Cliente cliente);
+
+  Future<Cliente> atualizarCliente(String id, Cliente cliente);
+
+  Future<void> excluirCliente(String id);
 }

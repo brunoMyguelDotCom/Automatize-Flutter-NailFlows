@@ -53,6 +53,12 @@ class AgendaRepositoryApi implements AgendaRepository {
       if (detalhe is Map && detalhe['mensagem'] is String) {
         return detalhe['mensagem'] as String;
       }
+      if (detalhe is List && detalhe.isNotEmpty) {
+        final primeiro = detalhe.first;
+        if (primeiro is Map && primeiro['msg'] is String) {
+          return primeiro['msg'] as String;
+        }
+      }
     } catch (_) {
       // corpo sem JSON: cai na mensagem genérica
     }
@@ -93,6 +99,65 @@ class AgendaRepositoryApi implements AgendaRepository {
   @override
   Future<List<Servico>> listarServicos() async {
     return AgendaRepositoryFalso.catalogo;
+  }
+
+  @override
+  Future<Cliente> criarCliente(Cliente cliente) async {
+    final corpo = await _enviar(
+      'POST',
+      _url('/clientes/'),
+      _corpoDoCliente(cliente),
+    );
+    return Cliente.fromJson(corpo as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Cliente> atualizarCliente(String id, Cliente cliente) async {
+    final corpo = await _enviar(
+      'PATCH',
+      _url('/clientes/$id'),
+      _corpoDoCliente(cliente),
+    );
+    return Cliente.fromJson(corpo as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> excluirCliente(String id) async {
+    await _enviar('DELETE', _url('/clientes/$id'), null);
+  }
+
+  Map<String, dynamic> _corpoDoCliente(Cliente cliente) {
+    return {
+      'name': cliente.nome,
+      'email': cliente.email,
+      'phone': cliente.telefone,
+    };
+  }
+
+  Future<dynamic> _enviar(
+    String metodo,
+    Uri url,
+    Map<String, dynamic>? corpo,
+  ) async {
+    final requisicao = http.Request(metodo, url);
+    requisicao.headers['Content-Type'] = 'application/json; charset=utf-8';
+    if (corpo != null) requisicao.body = jsonEncode(corpo);
+
+    final http.Response resposta;
+    try {
+      resposta = await http.Response.fromStream(
+        await _cliente.send(requisicao),
+      );
+    } catch (_) {
+      throw FalhaDaApi('Não consegui falar com o servidor.');
+    }
+
+    if (resposta.statusCode >= 400) {
+      throw FalhaDaApi(_mensagemDoErro(resposta));
+    }
+
+    if (resposta.body.isEmpty) return null;
+    return jsonDecode(utf8.decode(resposta.bodyBytes));
   }
 
   String _semFuso(DateTime data) {

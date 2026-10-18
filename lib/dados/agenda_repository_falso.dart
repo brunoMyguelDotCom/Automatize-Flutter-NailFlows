@@ -39,7 +39,7 @@ class AgendaRepositoryFalso implements AgendaRepository {
     blindagem,
   ];
 
-  static final List<Cliente> _clientes = [
+  final List<Cliente> _clientes = [
     Cliente(
       id: 'cli_maria',
       nome: 'Maria Silva',
@@ -75,6 +75,8 @@ class AgendaRepositoryFalso implements AgendaRepository {
   ];
 
   late final List<Agendamento> _agendamentos = _montarSemana();
+
+  int _proximoId = 1;
 
   List<Agendamento> _montarSemana() {
     final agora = DateTime.now();
@@ -205,5 +207,43 @@ class AgendaRepositoryFalso implements AgendaRepository {
     final lista = [..._clientes];
     lista.sort((a, b) => a.nome.compareTo(b.nome));
     return lista;
+  }
+
+  @override
+  Future<Cliente> criarCliente(Cliente cliente) async {
+    await Future.delayed(atraso);
+    final nova = Cliente(
+      id: 'cli_local_${_proximoId++}',
+      nome: cliente.nome,
+      email: cliente.email,
+      telefone: cliente.telefone,
+      observacao: cliente.observacao,
+    );
+    _clientes.add(nova);
+    return nova;
+  }
+
+  @override
+  Future<Cliente> atualizarCliente(String id, Cliente cliente) async {
+    await Future.delayed(atraso);
+    final posicao = _clientes.indexWhere((c) => c.id == id);
+    if (posicao == -1) {
+      throw Exception('Cliente não encontrada');
+    }
+    final atualizada = Cliente(
+      id: id,
+      nome: cliente.nome,
+      email: cliente.email,
+      telefone: cliente.telefone,
+      observacao: cliente.observacao,
+    );
+    _clientes[posicao] = atualizada;
+    return atualizada;
+  }
+
+  @override
+  Future<void> excluirCliente(String id) async {
+    await Future.delayed(atraso);
+    _clientes.removeWhere((c) => c.id == id);
   }
 }
