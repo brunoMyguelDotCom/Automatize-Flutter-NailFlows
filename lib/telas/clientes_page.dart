@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../dados/agenda_repository.dart';
-import '../modelos/agendamento.dart';
 import '../modelos/cliente.dart';
 import '../tema/cores.dart';
-import '../tema/tema.dart';
-import '../util/datas.dart';
 import '../widgets/avatar_cliente.dart';
 import '../widgets/estado_vazio.dart';
+import 'cliente_form_page.dart';
+import 'cliente_historico_page.dart';
 
 class ClientesPage extends StatefulWidget {
   const ClientesPage({super.key, required this.repositorio});
@@ -22,6 +21,7 @@ class _ClientesPageState extends State<ClientesPage> {
   final TextEditingController _buscaController = TextEditingController();
   List<Cliente> _clientes = [];
   bool _carregando = true;
+  String? _erro;
   String _busca = '';
 
   @override
@@ -37,12 +37,25 @@ class _ClientesPageState extends State<ClientesPage> {
   }
 
   Future<void> _carregar() async {
-    final lista = await widget.repositorio.listarClientes();
-    if (!mounted) return;
     setState(() {
-      _clientes = lista;
-      _carregando = false;
+      _carregando = true;
+      _erro = null;
     });
+
+    try {
+      final lista = await widget.repositorio.listarClientes();
+      if (!mounted) return;
+      setState(() {
+        _clientes = lista;
+        _carregando = false;
+      });
+    } catch (erro) {
+      if (!mounted) return;
+      setState(() {
+        _erro = erro.toString();
+        _carregando = false;
+      });
+    }
   }
 
   List<Cliente> get _filtrados {
@@ -53,87 +66,146 @@ class _ClientesPageState extends State<ClientesPage> {
         .toList();
   }
 
+  Future<void> _abrirFicha([Cliente? cliente]) async {
+    final mudou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) =>
+            ClienteFormPage(repositorio: widget.repositorio, cliente: cliente),
+      ),
+    );
+
+    if (mudou == true) {
+      await _carregar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cadastro atualizado'),
+          backgroundColor: vinhoEscuro,
+        ),
+      );
+    }
+  }
+
+  void _abrirHistorico(Cliente cliente) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => ClienteHistoricoPage(
+          cliente: cliente,
+          repositorio: widget.repositorio,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _abrirFicha(),
+        backgroundColor: vinho,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.person_add_alt_1_rounded),
+        label: const Text('Nova cliente'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: TextField(
+              controller: _buscaController,
+              onChanged: (valor) => setState(() => _busca = valor),
+              decoration: InputDecoration(
+                hintText: 'Buscar cliente',
+                prefixIcon: const Icon(Icons.search_rounded, color: textoApoio),
+                filled: true,
+                fillColor: superficie,
+                border: _borda(linha),
+                enabledBorder: _borda(linha),
+                focusedBorder: _borda(vinho),
+              ),
+            ),
+          ),
+          Expanded(child: _corpo()),
+        ],
+      ),
+    );
+  }
+
+  OutlineInputBorder _borda(Color cor) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: cor),
+    );
+  }
+
+  Widget _corpo() {
     if (_carregando) {
       return const Center(child: CircularProgressIndicator(color: vinho));
     }
 
+    if (_erro != null) {
+      return EstadoVazio(
+        icone: Icons.wifi_off_rounded,
+        titulo: 'Não consegui carregar as clientes',
+        descricao: _erro,
+        acao: FilledButton(
+          onPressed: _carregar,
+          child: const Text('Tentar de novo'),
+        ),
+      );
+    }
+
     final clientes = _filtrados;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          child: TextField(
-            controller: _buscaController,
-            onChanged: (valor) => setState(() => _busca = valor),
-            decoration: InputDecoration(
-              hintText: 'Buscar cliente',
-              prefixIcon: const Icon(Icons.search_rounded, color: textoApoio),
-              filled: true,
-              fillColor: superficie,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: linha),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: linha),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: vinho),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: clientes.isEmpty
-              ? const EstadoVazio(
-                  icone: Icons.person_search_outlined,
-                  titulo: 'Nenhuma cliente com esse nome',
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
-                  itemCount: clientes.length,
-                  separatorBuilder: (context, i) => const SizedBox(height: 10),
-                  itemBuilder: (context, indice) {
-                    final cliente = clientes[indice];
-                    return _CartaoCliente(
-                      cliente: cliente,
-                      aoTocar: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) => FichaClientePage(
-                            cliente: cliente,
-                            repositorio: widget.repositorio,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
+    if (clientes.isEmpty) {
+      return EstadoVazio(
+        icone: _busca.isEmpty
+            ? Icons.people_outline_rounded
+            : Icons.person_search_outlined,
+        titulo: _busca.isEmpty
+            ? 'Nenhuma cliente cadastrada'
+            : 'Nenhuma cliente com esse nome',
+        descricao: _busca.isEmpty ? 'Cadastre a primeira pelo botão.' : null,
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+      itemCount: clientes.length,
+      separatorBuilder: (context, i) => const SizedBox(height: 10),
+      itemBuilder: (context, indice) {
+        final cliente = clientes[indice];
+        return _CartaoCliente(
+          cliente: cliente,
+          aoAbrirFicha: () => _abrirFicha(cliente),
+          aoAbrirHistorico: () => _abrirHistorico(cliente),
+        );
+      },
     );
   }
 }
 
 class _CartaoCliente extends StatelessWidget {
-  const _CartaoCliente({required this.cliente, required this.aoTocar});
+  const _CartaoCliente({
+    required this.cliente,
+    required this.aoAbrirFicha,
+    required this.aoAbrirHistorico,
+  });
 
   final Cliente cliente;
-  final VoidCallback aoTocar;
+  final VoidCallback aoAbrirFicha;
+  final VoidCallback aoAbrirHistorico;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: aoTocar,
+        onTap: aoAbrirFicha,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
           decoration: BoxDecoration(
             color: superficie,
             borderRadius: BorderRadius.circular(16),
@@ -150,6 +222,8 @@ class _CartaoCliente extends StatelessWidget {
                   children: [
                     Text(
                       cliente.nome,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w600,
@@ -159,176 +233,25 @@ class _CartaoCliente extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       cliente.telefone ?? cliente.email,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: textoApoio),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: textoApoio),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class FichaClientePage extends StatefulWidget {
-  const FichaClientePage({
-    super.key,
-    required this.cliente,
-    required this.repositorio,
-  });
-
-  final Cliente cliente;
-  final AgendaRepository repositorio;
-
-  @override
-  State<FichaClientePage> createState() => _FichaClientePageState();
-}
-
-class _FichaClientePageState extends State<FichaClientePage> {
-  List<Agendamento> _historico = [];
-  bool _carregando = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _carregar();
-  }
-
-  Future<void> _carregar() async {
-    final todos = await widget.repositorio.listarAgendamentos();
-    if (!mounted) return;
-    setState(() {
-      _historico =
-          todos.where((a) => a.cliente.id == widget.cliente.id).toList()
-            ..sort((a, b) => b.inicio.compareTo(a.inicio));
-      _carregando = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cliente = widget.cliente;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Cliente')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-            children: [
-              Column(
-                children: [
-                  AvatarCliente(cliente: cliente, tamanho: 76),
-                  const SizedBox(height: 12),
-                  Text(cliente.nome, style: estiloTitulo(tamanho: 24)),
-                  const SizedBox(height: 4),
-                  Text(
-                    cliente.email,
-                    style: const TextStyle(fontSize: 13.5, color: textoApoio),
-                  ),
-                  if (cliente.telefone != null)
-                    Text(
-                      cliente.telefone!,
-                      style: const TextStyle(fontSize: 13.5, color: textoApoio),
-                    ),
-                ],
+              IconButton(
+                onPressed: aoAbrirFicha,
+                icon: const Icon(Icons.edit_outlined),
+                color: vinho,
+                tooltip: 'Ver e editar',
               ),
-              if (cliente.observacao != null) ...[
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: douradoFundo,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        size: 18,
-                        color: dourado,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          cliente.observacao!,
-                          style: const TextStyle(fontSize: 14, color: texto),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 26),
-              const Text(
-                'HISTÓRICO',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: vinho,
-                ),
+              IconButton(
+                onPressed: aoAbrirHistorico,
+                icon: const Icon(Icons.history_rounded),
+                color: textoApoio,
+                tooltip: 'Histórico de atendimentos',
               ),
-              const SizedBox(height: 10),
-              if (_carregando)
-                const Center(child: CircularProgressIndicator(color: vinho))
-              else if (_historico.isEmpty)
-                const Text(
-                  'Nenhum atendimento registrado.',
-                  style: TextStyle(fontSize: 14, color: textoApoio),
-                )
-              else
-                ..._historico.map(
-                  (agendamento) => Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: superficie,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: linha),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                agendamento.servico.nome,
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: texto,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${diaPorExtenso(agendamento.inicio)} · '
-                                '${hora(agendamento.inicio)}',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  color: textoApoio,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          agendamento.situacao.rotulo,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: textoApoio,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
