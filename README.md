@@ -115,11 +115,13 @@ implementação em memória, `AgendaRepositoryFalso`, com uma semana de exemplo.
 > de exemplo. O que permanece é a interface `AgendaRepository`, que define o que o
 > app precisa pedir.
 
-A implementação que chama a API entra como uma segunda classe, e a troca acontece em
-uma linha do `main.dart`:
+A implementação que chama a API é o `AgendaRepositoryApi`, e a escolha entre as
+duas acontece em um ponto só do `main.dart`, pelo parâmetro de execução:
 
 ```dart
-final AgendaRepository repositorio = AgendaRepositoryFalso();
+final AgendaRepository repositorio = ApiConfig.usarApi
+    ? AgendaRepositoryApi()
+    : AgendaRepositoryFalso();
 ```
 
 Nenhuma tela precisa mudar nessa troca.
