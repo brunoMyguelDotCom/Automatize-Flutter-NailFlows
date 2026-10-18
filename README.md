@@ -22,6 +22,32 @@ flutter pub get
 flutter run -d chrome
 ```
 
+### Rodando com a API local
+
+Por padrão o painel usa dados de exemplo em memória. Para ligá-lo na API:
+
+```bash
+flutter run -d chrome --dart-define=USAR_API=true --dart-define=API_URL=http://127.0.0.1:8000
+```
+
+A tela de Ajustes mostra qual origem está em uso. Sem os parâmetros, o painel
+volta aos dados de exemplo — útil para demonstrar sem depender do servidor.
+
+### Rodando em outra máquina
+
+O projeto exige **Dart 3.8 ou superior** (Flutter 3.32+). Se o `flutter pub get`
+reclamar da versão, rode `flutter upgrade` antes.
+
+Dois problemas já encontrados em laboratório:
+
+- **Flutter instalado em pasta com acento** (por exemplo `C:\Users\Laboratório`)
+  faz a compilação dos shaders do próprio SDK falhar, com erro do `impellerc`
+  sobre `ink_sparkle.frag`. A saída é instalar o SDK em um caminho simples, como
+  `C:\src\flutter`, e ajustar o PATH.
+- **Sem permissão para instalar o Flutter**: não é preciso. A versão web é um
+  site estático; basta copiar a pasta `build/web` e servir com qualquer servidor,
+  por exemplo `python -m http.server 8080` dentro dela.
+
 Para gerar a versão publicável:
 
 ```bash
@@ -100,6 +126,17 @@ Nenhuma tela precisa mudar nessa troca.
 
 Como o painel roda no navegador, a API precisa liberar **CORS** para o endereço
 onde ele for publicado, senão o navegador bloqueia as chamadas.
+
+Diferenças entre o contrato combinado e o que a API devolve hoje, já tratadas
+no painel:
+
+| Combinado | API hoje |
+|---|---|
+| `inicio` e `fim` na listagem | `start_date` e `end_date` |
+| `service` como objeto com id e duração | texto com o nome do serviço |
+| `appointment_status` (agendado, cancelado…) | ainda não existe |
+| cancelar preservando o registro | `DELETE` apaga o agendamento |
+| catálogo em `/servicos` | ainda não existe; o painel usa a lista local |
 
 ## Identidade visual
 
