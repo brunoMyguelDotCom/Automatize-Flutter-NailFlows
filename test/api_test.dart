@@ -50,8 +50,11 @@ void main() {
       urlBase: 'http://localhost:8000',
       cliente: MockClient((requisicao) async {
         chamada = requisicao.url;
-        return http.Response('[$agendamentoDaApi]', 200,
-            headers: {'content-type': 'application/json; charset=utf-8'});
+        return http.Response(
+          '[$agendamentoDaApi]',
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
       }),
     );
 
@@ -71,8 +74,11 @@ void main() {
     final repositorio = AgendaRepositoryApi(
       urlBase: 'http://localhost:8000',
       cliente: MockClient((requisicao) async {
-        return http.Response('[$clienteDaApi]', 200,
-            headers: {'content-type': 'application/json; charset=utf-8'});
+        return http.Response(
+          '[$clienteDaApi]',
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
       }),
     );
 
@@ -87,18 +93,23 @@ void main() {
     final repositorio = AgendaRepositoryApi(
       urlBase: 'http://localhost:8000',
       cliente: MockClient((requisicao) async {
-        return http.Response('{"detail": "Agendamento não encontrado"}', 404,
-            headers: {'content-type': 'application/json; charset=utf-8'});
+        return http.Response(
+          '{"detail": "Agendamento não encontrado"}',
+          404,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
       }),
     );
 
     expect(
       () => repositorio.listarAgendamentos(),
-      throwsA(isA<FalhaDaApi>().having(
-        (e) => e.mensagem,
-        'mensagem',
-        'Agendamento não encontrado',
-      )),
+      throwsA(
+        isA<FalhaDaApi>().having(
+          (e) => e.mensagem,
+          'mensagem',
+          'Agendamento não encontrado',
+        ),
+      ),
     );
   });
 }
