@@ -63,20 +63,6 @@ class _PainelState extends State<Painel> {
               ],
             ),
           ),
-          floatingActionButton: _area == 0
-              ? FloatingActionButton.extended(
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Novo atendimento: ainda não implementado'),
-                      backgroundColor: vinhoEscuro,
-                    ),
-                  ),
-                  backgroundColor: vinho,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Novo atendimento'),
-                )
-              : null,
           bottomNavigationBar: largo
               ? null
               : NavigationBar(

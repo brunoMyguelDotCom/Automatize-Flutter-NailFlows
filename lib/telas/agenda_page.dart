@@ -74,17 +74,32 @@ class _AgendaPageState extends State<AgendaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Cabecalho(
-          dia: _dia,
-          agendamentos: _agendamentos,
-          aoSelecionarDia: _selecionarDia,
-          aoIrParaHoje: () => _selecionarDia(DateTime.now()),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Novo atendimento: ainda não implementado'),
+            backgroundColor: vinhoEscuro,
+          ),
         ),
-        Expanded(child: _corpo()),
-      ],
+        backgroundColor: vinho,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Novo atendimento'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Cabecalho(
+            dia: _dia,
+            agendamentos: _agendamentos,
+            aoSelecionarDia: _selecionarDia,
+            aoIrParaHoje: () => _selecionarDia(DateTime.now()),
+          ),
+          Expanded(child: _corpo()),
+        ],
+      ),
     );
   }
 
