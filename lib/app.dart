@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'dados/agenda_repository.dart';
+import 'dados/fonte_de_dados.dart';
 import 'tema/cores.dart';
 import 'telas/agenda_page.dart';
 import 'telas/ajustes_page.dart';
@@ -8,9 +8,9 @@ import 'telas/clientes_page.dart';
 import 'telas/servicos_page.dart';
 
 class Painel extends StatefulWidget {
-  const Painel({super.key, required this.repositorio});
+  const Painel({super.key, required this.fonte});
 
-  final AgendaRepository repositorio;
+  final FonteDeDados fonte;
 
   @override
   State<Painel> createState() => _PainelState();
@@ -29,13 +29,13 @@ class _PainelState extends State<Painel> {
   Widget _conteudo() {
     switch (_area) {
       case 1:
-        return ClientesPage(repositorio: widget.repositorio);
+        return ClientesPage(repositorio: widget.fonte.repositorio);
       case 2:
-        return ServicosPage(repositorio: widget.repositorio);
+        return ServicosPage(repositorio: widget.fonte.repositorio);
       case 3:
-        return const AjustesPage();
+        return AjustesPage(fonte: widget.fonte);
       default:
-        return AgendaPage(repositorio: widget.repositorio);
+        return AgendaPage(repositorio: widget.fonte.repositorio);
     }
   }
 

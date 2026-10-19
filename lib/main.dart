@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
 
 import 'app.dart';
-import 'dados/agenda_repository.dart';
-import 'dados/agenda_repository_api.dart';
-import 'dados/agenda_repository_falso.dart';
-import 'dados/api_config.dart';
+import 'dados/fonte_de_dados.dart';
 import 'tema/tema.dart';
 
-void main() {
-  final AgendaRepository repositorio = ApiConfig.usarApi
-      ? AgendaRepositoryApi()
-      : AgendaRepositoryFalso();
-
-  runApp(NailsFlowApp(repositorio: repositorio));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final fonte = await escolherFonteDeDados();
+  runApp(NailsFlowApp(fonte: fonte));
 }
 
 class NailsFlowApp extends StatelessWidget {
-  const NailsFlowApp({super.key, required this.repositorio});
+  const NailsFlowApp({super.key, required this.fonte});
 
-  final AgendaRepository repositorio;
+  final FonteDeDados fonte;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +21,7 @@ class NailsFlowApp extends StatelessWidget {
       title: 'NailsFlow',
       debugShowCheckedModeBanner: false,
       theme: temaNailsFlow(),
-      home: Painel(repositorio: repositorio),
+      home: Painel(fonte: fonte),
     );
   }
 }

@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nailsflow/dados/agenda_repository_api.dart';
+import 'package:nailsflow/dados/agenda_repository_falso.dart';
+import 'package:nailsflow/dados/fonte_de_dados.dart';
 import 'package:nailsflow/modelos/agendamento.dart';
 
 const String agendamentoDaApi = '''
@@ -111,5 +114,28 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('usa a API quando ela responde', () async {
+    final fonte = await escolherFonteDeDados(
+      cliente: MockClient((requisicao) async {
+        return http.Response('{"message": "ok"}', 200);
+      }),
+    );
+
+    expect(fonte.ehApi, isTrue);
+    expect(fonte.descricao, contains('API em'));
+  });
+
+  test('cai nos dados de exemplo quando a API nao responde', () async {
+    final fonte = await escolherFonteDeDados(
+      cliente: MockClient((requisicao) async {
+        throw const SocketException('sem servidor');
+      }),
+    );
+
+    expect(fonte.ehApi, isFalse);
+    expect(fonte.repositorio, isA<AgendaRepositoryFalso>());
+    expect(fonte.descricao, contains('não respondeu'));
   });
 }

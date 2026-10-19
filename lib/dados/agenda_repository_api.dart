@@ -30,6 +30,17 @@ class AgendaRepositoryApi implements AgendaRepository {
     return Uri.parse('$urlBase$caminho').replace(queryParameters: parametros);
   }
 
+  Future<bool> estaNoAr() async {
+    try {
+      final resposta = await _cliente
+          .get(_url('/'))
+          .timeout(ApiConfig.tempoDeEspera);
+      return resposta.statusCode < 500;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<dynamic> _buscar(Uri url) async {
     final http.Response resposta;
     try {

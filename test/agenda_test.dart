@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nailsflow/dados/agenda_repository_falso.dart';
+import 'package:nailsflow/dados/fonte_de_dados.dart';
 import 'package:nailsflow/main.dart';
 import 'package:nailsflow/widgets/cartao_atendimento.dart';
 
@@ -13,7 +14,12 @@ Future<void> abrirPainel(
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
-    NailsFlowApp(repositorio: AgendaRepositoryFalso(atraso: Duration.zero)),
+    NailsFlowApp(
+      fonte: FonteDeDados(
+        repositorio: AgendaRepositoryFalso(atraso: Duration.zero),
+        descricao: 'Dados de exemplo',
+      ),
+    ),
   );
   await tester.pumpAndSettle();
 }

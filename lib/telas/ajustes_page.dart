@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../dados/api_config.dart';
+import '../dados/fonte_de_dados.dart';
 import '../tema/cores.dart';
 
 class AjustesPage extends StatelessWidget {
-  const AjustesPage({super.key});
+  const AjustesPage({super.key, required this.fonte});
+
+  final FonteDeDados fonte;
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +40,8 @@ class AjustesPage extends StatelessWidget {
             _Item(
               icone: Icons.cloud_outlined,
               titulo: 'Origem dos dados',
-              detalhe: ApiConfig.descricaoDaOrigem,
-              aDefinir: !ApiConfig.usarApi,
+              detalhe: fonte.descricao,
+              aDefinir: !fonte.ehApi,
             ),
             const SizedBox(height: 22),
             const _Grupo('Sobre'),

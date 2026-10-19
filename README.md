@@ -24,14 +24,22 @@ flutter run -d chrome
 
 ### Rodando com a API local
 
-Por padrão o painel usa dados de exemplo em memória. Para ligá-lo na API:
+O painel procura a API ao abrir. Se ela responder, usa os dados reais; se não
+responder, cai nos dados de exemplo em memória e continua funcionando. A tela de
+Ajustes mostra qual origem está em uso.
+
+Com a API rodando em `http://localhost:8000`, basta:
 
 ```bash
-flutter run -d chrome --dart-define=USAR_API=true --dart-define=API_URL=http://127.0.0.1:8000
+flutter run -d chrome
 ```
 
-A tela de Ajustes mostra qual origem está em uso. Sem os parâmetros, o painel
-volta aos dados de exemplo — útil para demonstrar sem depender do servidor.
+Se a API estiver em outro endereço, ou para forçar os dados de exemplo:
+
+```bash
+flutter run -d chrome --dart-define=API_URL=http://127.0.0.1:8001
+flutter run -d chrome --dart-define=USAR_API=false
+```
 
 ### Rodando em outra máquina
 
@@ -119,10 +127,11 @@ A implementação que chama a API é o `AgendaRepositoryApi`, e a escolha entre 
 duas acontece em um ponto só do `main.dart`, pelo parâmetro de execução:
 
 ```dart
-final AgendaRepository repositorio = ApiConfig.usarApi
-    ? AgendaRepositoryApi()
-    : AgendaRepositoryFalso();
+final fonte = await escolherFonteDeDados();
 ```
+
+Essa função, em `dados/fonte_de_dados.dart`, chama a raiz da API com três segundos
+de limite: respondeu, usa `AgendaRepositoryApi`; falhou, usa `AgendaRepositoryFalso`.
 
 Nenhuma tela precisa mudar nessa troca.
 
