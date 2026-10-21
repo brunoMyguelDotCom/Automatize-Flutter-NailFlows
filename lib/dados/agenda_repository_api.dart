@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../modelos/agendamento.dart';
 import '../modelos/cliente.dart';
+import '../modelos/dados_do_agendamento.dart';
 import '../modelos/servico.dart';
 import 'agenda_repository.dart';
 import 'agenda_repository_falso.dart';
@@ -108,9 +109,52 @@ class AgendaRepositoryApi implements AgendaRepository {
   }
 
   @override
+  Future<Agendamento> criarAgendamento(DadosDoAgendamento dados) async {
+    final corpo = await _enviar('POST', _url('/agendamentos/'), dados.toJson());
+    return Agendamento.fromJson(corpo as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Agendamento> atualizarAgendamento(
+    String id,
+    DadosDoAgendamento dados,
+  ) async {
+    final corpo = await _enviar(
+      'PATCH',
+      _url('/agendamentos/$id'),
+      dados.toJson(),
+    );
+    return Agendamento.fromJson(corpo as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> excluirAgendamento(String id) async {
+    await _enviar('DELETE', _url('/agendamentos/$id'), null);
+  }
+
+  @override
   Future<List<Servico>> listarServicos() async {
     return AgendaRepositoryFalso.catalogo;
   }
+
+  @override
+  Future<Servico> criarServico(Servico servico) async {
+    throw FalhaDaApi(_semCadastroDeServicos);
+  }
+
+  @override
+  Future<Servico> atualizarServico(String id, Servico servico) async {
+    throw FalhaDaApi(_semCadastroDeServicos);
+  }
+
+  @override
+  Future<void> excluirServico(String id) async {
+    throw FalhaDaApi(_semCadastroDeServicos);
+  }
+
+  static const String _semCadastroDeServicos =
+      'O servidor ainda não tem cadastro de serviços. '
+      'A lista exibida é fixa no aplicativo.';
 
   @override
   Future<Cliente> criarCliente(Cliente cliente) async {
