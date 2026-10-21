@@ -1,20 +1,95 @@
 import 'package:flutter/material.dart';
 
+import '../dados/agenda_repository.dart';
 import '../modelos/agendamento.dart';
 import '../tema/cores.dart';
 import '../tema/tema.dart';
 import '../util/datas.dart';
 import '../util/telefone.dart';
 import '../widgets/etiqueta.dart';
+import 'agendamento_form_page.dart';
 
-class DetalheAtendimentoPage extends StatelessWidget {
-  const DetalheAtendimentoPage({super.key, required this.agendamento});
+class DetalheAtendimentoPage extends StatefulWidget {
+  const DetalheAtendimentoPage({
+    super.key,
+    required this.agendamento,
+    this.repositorio,
+  });
 
   final Agendamento agendamento;
+  final AgendaRepository? repositorio;
+
+  @override
+  State<DetalheAtendimentoPage> createState() => _DetalheAtendimentoPageState();
+}
+
+class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
+  late Agendamento agendamento = widget.agendamento;
+  bool _processando = false;
+
+  Future<void> _editar() async {
+    final repositorio = widget.repositorio;
+    if (repositorio == null) return;
+
+    final mudou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => AgendamentoFormPage(
+          repositorio: repositorio,
+          agendamento: agendamento,
+        ),
+      ),
+    );
+
+    if (mudou == true && mounted) Navigator.of(context).pop(true);
+  }
+
+  Future<void> _excluir() async {
+    final repositorio = widget.repositorio;
+    if (repositorio == null) return;
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar atendimento'),
+        content: Text(
+          'O atendimento de ${agendamento.cliente.primeiroNome} será removido '
+          'da agenda e do calendário.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: recusado),
+            child: const Text('Cancelar atendimento'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmou != true) return;
+
+    setState(() => _processando = true);
+
+    try {
+      await repositorio.excluirAgendamento(agendamento.id);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (erro) {
+      if (!mounted) return;
+      setState(() => _processando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(erro.toString()), backgroundColor: recusado),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cliente = agendamento.cliente;
+    final podeEditar = widget.repositorio != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Atendimento')),
@@ -161,7 +236,7 @@ class DetalheAtendimentoPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _emBreve(context, 'Editar atendimento'),
+                      onPressed: podeEditar && !_processando ? _editar : null,
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Editar'),
                       style: OutlinedButton.styleFrom(
@@ -174,8 +249,7 @@ class DetalheAtendimentoPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _emBreve(context, 'Cancelar atendimento'),
+                      onPressed: podeEditar && !_processando ? _excluir : null,
                       icon: const Icon(Icons.event_busy_outlined, size: 18),
                       label: const Text('Cancelar'),
                       style: OutlinedButton.styleFrom(
@@ -189,7 +263,7 @@ class DetalheAtendimentoPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
-                onPressed: () => _emBreve(context, 'Avisar pelo WhatsApp'),
+                onPressed: () => _emBreve('Avisar pelo WhatsApp'),
                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                 label: const Text('Avisar a cliente'),
                 style: FilledButton.styleFrom(
@@ -204,7 +278,7 @@ class DetalheAtendimentoPage extends StatelessWidget {
     );
   }
 
-  void _emBreve(BuildContext context, String acao) {
+  void _emBreve(String acao) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$acao: ainda não implementado'),

@@ -8,6 +8,7 @@ import '../util/datas.dart';
 import '../widgets/cartao_atendimento.dart';
 import '../widgets/estado_vazio.dart';
 import '../widgets/faixa_de_dias.dart';
+import 'agendamento_form_page.dart';
 import 'detalhe_atendimento_page.dart';
 
 class AgendaPage extends StatefulWidget {
@@ -61,6 +62,41 @@ class _AgendaPageState extends State<AgendaPage> {
     _carregar();
   }
 
+  Future<void> _novoAtendimento() async {
+    final criou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => AgendamentoFormPage(
+          repositorio: widget.repositorio,
+          diaSugerido: _dia,
+        ),
+      ),
+    );
+
+    if (criou == true) {
+      await _carregar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Atendimento marcado'),
+          backgroundColor: vinhoEscuro,
+        ),
+      );
+    }
+  }
+
+  Future<void> _abrirDetalhe(Agendamento agendamento) async {
+    final mudou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => DetalheAtendimentoPage(
+          agendamento: agendamento,
+          repositorio: widget.repositorio,
+        ),
+      ),
+    );
+
+    if (mudou == true) await _carregar();
+  }
+
   Agendamento? get _proximo {
     if (!mesmoDia(_dia, DateTime.now())) return null;
     final agora = DateTime.now();
@@ -77,12 +113,7 @@ class _AgendaPageState extends State<AgendaPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Novo atendimento: ainda não implementado'),
-            backgroundColor: vinhoEscuro,
-          ),
-        ),
+        onPressed: _novoAtendimento,
         backgroundColor: vinho,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -141,12 +172,7 @@ class _AgendaPageState extends State<AgendaPage> {
           return CartaoAtendimento(
             agendamento: agendamento,
             proximo: agendamento.id == proximo?.id,
-            aoTocar: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) =>
-                    DetalheAtendimentoPage(agendamento: agendamento),
-              ),
-            ),
+            aoTocar: () => _abrirDetalhe(agendamento),
           );
         },
       ),
