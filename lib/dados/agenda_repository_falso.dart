@@ -1,12 +1,18 @@
 import '../modelos/agendamento.dart';
 import '../modelos/cliente.dart';
+import '../modelos/dados_do_agendamento.dart';
 import '../modelos/servico.dart';
+import '../util/datas.dart';
 import 'agenda_repository.dart';
 
 class AgendaRepositoryFalso implements AgendaRepository {
-  AgendaRepositoryFalso({this.atraso = const Duration(milliseconds: 400)});
+  AgendaRepositoryFalso({
+    this.atraso = const Duration(milliseconds: 400),
+    this.comAgendamentosDeExemplo = true,
+  });
 
   final Duration atraso;
+  final bool comAgendamentosDeExemplo;
 
   static final Servico moldeF1 = Servico(
     id: 'svc_molde_f1',
@@ -38,6 +44,8 @@ class AgendaRepositoryFalso implements AgendaRepository {
     esmaltacaoGel,
     blindagem,
   ];
+
+  late final List<Servico> _servicos = [...catalogo];
 
   final List<Cliente> _clientes = [
     Cliente(
@@ -74,7 +82,9 @@ class AgendaRepositoryFalso implements AgendaRepository {
     ),
   ];
 
-  late final List<Agendamento> _agendamentos = _montarSemana();
+  late final List<Agendamento> _agendamentos = comAgendamentosDeExemplo
+      ? _montarSemana()
+      : <Agendamento>[];
 
   int _proximoId = 1;
 
@@ -198,7 +208,113 @@ class AgendaRepositoryFalso implements AgendaRepository {
   @override
   Future<List<Servico>> listarServicos() async {
     await Future.delayed(atraso);
-    return catalogo;
+    return [..._servicos];
+  }
+
+  @override
+  Future<Servico> criarServico(Servico servico) async {
+    await Future.delayed(atraso);
+    final novo = Servico(
+      id: 'svc_local_${_proximoId++}',
+      nome: servico.nome,
+      duracaoMinutos: servico.duracaoMinutos,
+      ativo: servico.ativo,
+    );
+    _servicos.add(novo);
+    return novo;
+  }
+
+  @override
+  Future<Servico> atualizarServico(String id, Servico servico) async {
+    await Future.delayed(atraso);
+    final posicao = _servicos.indexWhere((s) => s.id == id);
+    if (posicao == -1) {
+      throw Exception('Serviço não encontrado');
+    }
+    final atualizado = Servico(
+      id: id,
+      nome: servico.nome,
+      duracaoMinutos: servico.duracaoMinutos,
+      ativo: servico.ativo,
+    );
+    _servicos[posicao] = atualizado;
+    return atualizado;
+  }
+
+  @override
+  Future<void> excluirServico(String id) async {
+    await Future.delayed(atraso);
+    _servicos.removeWhere((s) => s.id == id);
+  }
+
+  void _validar(DadosDoAgendamento dados, {String? ignorandoId}) {
+    if (dados.inicio.isBefore(DateTime.now())) {
+      throw Exception('Não dá para marcar em um horário que já passou.');
+    }
+
+    for (final existente in _agendamentos) {
+      if (existente.id == ignorandoId) continue;
+      if (!existente.ativo) continue;
+      final conflita =
+          dados.inicio.isBefore(existente.fim) &&
+          dados.fim.isAfter(existente.inicio);
+      if (conflita) {
+        throw Exception(
+          'Já existe atendimento de ${existente.cliente.primeiroNome} '
+          'das ${hora(existente.inicio)} às ${hora(existente.fim)}.',
+        );
+      }
+    }
+  }
+
+  @override
+  Future<Agendamento> criarAgendamento(DadosDoAgendamento dados) async {
+    await Future.delayed(atraso);
+    _validar(dados);
+    final novo = Agendamento(
+      id: 'agd_local_${_proximoId++}',
+      cliente: dados.cliente,
+      servico: dados.servico,
+      inicio: dados.inicio,
+      duracaoMinutos: dados.duracaoMinutos,
+      observacao: dados.observacao,
+    );
+    _agendamentos.add(novo);
+    return novo;
+  }
+
+  @override
+  Future<Agendamento> atualizarAgendamento(
+    String id,
+    DadosDoAgendamento dados,
+  ) async {
+    await Future.delayed(atraso);
+    final posicao = _agendamentos.indexWhere((a) => a.id == id);
+    if (posicao == -1) {
+      throw Exception('Atendimento não encontrado');
+    }
+    _validar(dados, ignorandoId: id);
+    final anterior = _agendamentos[posicao];
+    final atualizado = Agendamento(
+      id: id,
+      cliente: dados.cliente,
+      servico: dados.servico,
+      inicio: dados.inicio,
+      duracaoMinutos: dados.duracaoMinutos,
+      observacao: dados.observacao,
+      situacao: anterior.situacao,
+      statusConvite: anterior.statusConvite,
+      googleEventId: anterior.googleEventId,
+      ultimaSincronizacao: anterior.ultimaSincronizacao,
+    );
+    _agendamentos[posicao] = atualizado;
+    return atualizado;
+  }
+
+  @override
+  Future<void> excluirAgendamento(String id) async {
+    await Future.delayed(atraso);
+    _agendamentos.removeWhere((a) => a.id == id);
   }
 
   @override

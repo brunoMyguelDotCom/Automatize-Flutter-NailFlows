@@ -95,6 +95,44 @@ lib/
     └── datas.dart         formatação de data e hora em português
 ```
 
+## Padrão de commits e branches
+
+O mesmo padrão usado no repositório da API.
+
+**Branch por tarefa**, criada a partir da `main`:
+
+```
+feat/cadastro-de-agendamento
+fix/mascara-de-telefone
+doc/instrucoes-de-execucao
+```
+
+**Mensagem de commit** no formato `tipo: descrição`, em minúsculas, no imperativo
+e sem ponto final:
+
+| Tipo | Quando usar |
+|---|---|
+| `feat` | funcionalidade nova para quem usa o sistema |
+| `fix` | correção de comportamento errado |
+| `doc` | só documentação, sem mexer em código |
+| `refactor` | mexe no código sem mudar o que o sistema faz |
+| `test` | só testes |
+| `chore` | dependências, configuração, build |
+
+Quando ajudar, o módulo entra entre parênteses:
+
+```
+feat(clientes): adiciona cadastro e edicao
+fix(agenda): corrige cartao estourando em tela estreita
+chore: atualiza dependencias do flutter
+```
+
+Um commit resolve **uma coisa**. Se a mensagem precisa de "e" no meio, provavelmente
+são dois commits.
+
+A branch vira um Pull Request para a `main`. Mesmo trabalhando sozinho no front, o
+PR serve de registro do que mudou e por quê.
+
 ## Regras do domínio
 
 - Um atendimento ocupa da hora de início até o fim, calculado pela **duração do

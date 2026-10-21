@@ -197,7 +197,7 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
                 CampoFormulario(
                   controlador: _telefone,
                   rotulo: 'Telefone',
-                  dica: '+55 44 99999-9999',
+                  dica: '(44) 99999-9999',
                   icone: Icons.phone_outlined,
                   teclado: TextInputType.phone,
                   formatadores: [
