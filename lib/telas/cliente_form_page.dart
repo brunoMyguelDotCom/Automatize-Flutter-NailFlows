@@ -1,9 +1,12 @@
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../dados/agenda_repository.dart';
 import '../modelos/cliente.dart';
 import '../tema/cores.dart';
 import '../tema/tema.dart';
+import '../util/telefone.dart';
 import '../widgets/avatar_cliente.dart';
 import '../widgets/campo_formulario.dart';
 import 'cliente_historico_page.dart';
@@ -35,7 +38,9 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
     final cliente = widget.cliente;
     _nome = TextEditingController(text: cliente?.nome ?? '');
     _email = TextEditingController(text: cliente?.email ?? '');
-    _telefone = TextEditingController(text: cliente?.telefone ?? '');
+    _telefone = TextEditingController(
+      text: formatarTelefone(cliente?.telefone ?? ''),
+    );
   }
 
   @override
@@ -195,9 +200,15 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
                   dica: '+55 44 99999-9999',
                   icone: Icons.phone_outlined,
                   teclado: TextInputType.phone,
+                  formatadores: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    TelefoneOuCelularInputFormatter(),
+                  ],
                   validador: (valor) {
-                    if (valor == null || valor.trim().isEmpty) {
-                      return 'Informe o telefone';
+                    final texto = valor?.trim() ?? '';
+                    if (texto.isEmpty) return 'Informe o telefone';
+                    if (!telefoneCompleto(texto)) {
+                      return 'Telefone incompleto';
                     }
                     return null;
                   },

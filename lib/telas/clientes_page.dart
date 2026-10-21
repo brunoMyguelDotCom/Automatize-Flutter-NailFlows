@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../dados/agenda_repository.dart';
 import '../modelos/cliente.dart';
 import '../tema/cores.dart';
+import '../util/telefone.dart';
 import '../widgets/avatar_cliente.dart';
 import '../widgets/estado_vazio.dart';
 import 'cliente_form_page.dart';
@@ -232,7 +233,9 @@ class _CartaoCliente extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      cliente.telefone ?? cliente.email,
+                      cliente.telefone == null
+                          ? cliente.email
+                          : formatarTelefone(cliente.telefone!),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: textoApoio),

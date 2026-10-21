@@ -4,6 +4,7 @@ import '../modelos/agendamento.dart';
 import '../tema/cores.dart';
 import '../tema/tema.dart';
 import '../util/datas.dart';
+import '../util/telefone.dart';
 import '../widgets/etiqueta.dart';
 
 class DetalheAtendimentoPage extends StatelessWidget {
@@ -129,7 +130,7 @@ class DetalheAtendimentoPage extends StatelessWidget {
                 _Linha(
                   icone: Icons.phone_outlined,
                   rotulo: 'Telefone',
-                  valor: cliente.telefone!,
+                  valor: formatarTelefone(cliente.telefone!),
                 ),
               if (cliente.observacao != null)
                 _Linha(

@@ -68,7 +68,7 @@ void main() {
     );
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Telefone'),
-      '+55 44 99111-2233',
+      '44991112233',
     );
     await tester.tap(find.text('Cadastrar'));
     await tester.pumpAndSettle();
@@ -87,5 +87,41 @@ void main() {
 
     expect(find.text('Histórico'), findsOneWidget);
     expect(find.text('Juliana Prado'), findsWidgets);
+  });
+
+  testWidgets('telefone salvo com +55 abre formatado na ficha', (tester) async {
+    await abrirClientes(tester);
+
+    await tester.tap(find.text('Maria Silva'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextFormField, '(44) 99812-4455'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('telefone incompleto nao deixa cadastrar', (tester) async {
+    await abrirClientes(tester);
+
+    await tester.tap(find.text('Nova cliente'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nome'),
+      'Bruna Alves',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'E-mail'),
+      'bruna@email.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Telefone'),
+      '4499',
+    );
+    await tester.tap(find.text('Cadastrar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Telefone incompleto'), findsOneWidget);
   });
 }

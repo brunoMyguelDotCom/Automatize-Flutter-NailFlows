@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tema/cores.dart';
 
@@ -11,6 +12,7 @@ class CampoFormulario extends StatelessWidget {
     this.icone,
     this.teclado,
     this.validador,
+    this.formatadores,
   });
 
   final TextEditingController controlador;
@@ -19,6 +21,7 @@ class CampoFormulario extends StatelessWidget {
   final IconData? icone;
   final TextInputType? teclado;
   final String? Function(String?)? validador;
+  final List<TextInputFormatter>? formatadores;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +31,7 @@ class CampoFormulario extends StatelessWidget {
         controller: controlador,
         keyboardType: teclado,
         validator: validador,
+        inputFormatters: formatadores,
         decoration: InputDecoration(
           labelText: rotulo,
           hintText: dica,
