@@ -62,6 +62,22 @@ class _AgendaPageState extends State<AgendaPage> {
     _carregar();
   }
 
+  void _mudarSemana(int semanas) {
+    _selecionarDia(_dia.add(Duration(days: 7 * semanas)));
+  }
+
+  Future<void> _escolherNoCalendario() async {
+    final escolhido = await showDatePicker(
+      context: context,
+      initialDate: _dia,
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime(DateTime.now().year + 2),
+      helpText: 'Ir para uma data',
+    );
+
+    if (escolhido != null) _selecionarDia(escolhido);
+  }
+
   Future<void> _novoAtendimento() async {
     final criou = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
@@ -127,6 +143,9 @@ class _AgendaPageState extends State<AgendaPage> {
             agendamentos: _agendamentos,
             aoSelecionarDia: _selecionarDia,
             aoIrParaHoje: () => _selecionarDia(DateTime.now()),
+            aoVoltarSemana: () => _mudarSemana(-1),
+            aoAvancarSemana: () => _mudarSemana(1),
+            aoAbrirCalendario: _escolherNoCalendario,
           ),
           Expanded(child: _corpo()),
         ],
@@ -186,12 +205,18 @@ class _Cabecalho extends StatelessWidget {
     required this.agendamentos,
     required this.aoSelecionarDia,
     required this.aoIrParaHoje,
+    required this.aoVoltarSemana,
+    required this.aoAvancarSemana,
+    required this.aoAbrirCalendario,
   });
 
   final DateTime dia;
   final List<Agendamento> agendamentos;
   final ValueChanged<DateTime> aoSelecionarDia;
   final VoidCallback aoIrParaHoje;
+  final VoidCallback aoVoltarSemana;
+  final VoidCallback aoAvancarSemana;
+  final VoidCallback aoAbrirCalendario;
 
   @override
   Widget build(BuildContext context) {
@@ -238,10 +263,42 @@ class _Cabecalho extends StatelessWidget {
                   label: const Text('Hoje'),
                   style: TextButton.styleFrom(foregroundColor: vinho),
                 ),
+              IconButton(
+                onPressed: aoAbrirCalendario,
+                icon: const Icon(Icons.calendar_month_rounded),
+                color: vinho,
+                tooltip: 'Escolher uma data',
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          FaixaDeDias(diaSelecionado: dia, aoSelecionar: aoSelecionarDia),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _BotaoDeSemana(
+                icone: Icons.chevron_left_rounded,
+                dica: 'Semana anterior',
+                aoTocar: aoVoltarSemana,
+              ),
+              Expanded(
+                child: FaixaDeDias(
+                  diaSelecionado: dia,
+                  aoSelecionar: aoSelecionarDia,
+                ),
+              ),
+              _BotaoDeSemana(
+                icone: Icons.chevron_right_rounded,
+                dica: 'Próxima semana',
+                aoTocar: aoAvancarSemana,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              _intervaloDaSemana(dia),
+              style: const TextStyle(fontSize: 12, color: textoApoio),
+            ),
+          ),
         ],
       ),
     );
@@ -263,5 +320,41 @@ class _Cabecalho extends StatelessWidget {
 
     if (detalhes.isEmpty) return atendimentos;
     return '$atendimentos  ·  ${detalhes.join('  ·  ')}';
+  }
+
+  String _intervaloDaSemana(DateTime dia) {
+    final dias = semanaDe(dia);
+    final primeiro = dias.first;
+    final ultimo = dias.last;
+
+    if (primeiro.month == ultimo.month) {
+      return '${primeiro.day} a ${ultimo.day} de ${mesPorExtenso(ultimo)}';
+    }
+
+    return '${primeiro.day} de ${mesPorExtenso(primeiro)} a '
+        '${ultimo.day} de ${mesPorExtenso(ultimo)}';
+  }
+}
+
+class _BotaoDeSemana extends StatelessWidget {
+  const _BotaoDeSemana({
+    required this.icone,
+    required this.dica,
+    required this.aoTocar,
+  });
+
+  final IconData icone;
+  final String dica;
+  final VoidCallback aoTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: aoTocar,
+      icon: Icon(icone),
+      color: vinho,
+      tooltip: dica,
+      visualDensity: VisualDensity.compact,
+    );
   }
 }
