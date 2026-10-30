@@ -139,6 +139,11 @@ class _AgendamentoFormPageState extends State<AgendamentoFormPage> {
       context: context,
       initialTime: _hora,
       helpText: 'Horário de início',
+      initialEntryMode: TimePickerEntryMode.input,
+      builder: (context, filho) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: filho!,
+      ),
     );
     if (escolhida != null) setState(() => _hora = escolhida);
   }
