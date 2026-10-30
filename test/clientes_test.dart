@@ -11,6 +11,7 @@ Future<void> abrirClientes(WidgetTester tester) async {
 
   await tester.pumpWidget(
     NailsFlowApp(
+      jaAutenticado: true,
       fonte: FonteDeDados(
         repositorio: AgendaRepositoryFalso(atraso: Duration.zero),
         descricao: 'Dados de exemplo',

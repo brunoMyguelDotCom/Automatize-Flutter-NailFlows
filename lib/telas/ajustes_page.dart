@@ -4,9 +4,10 @@ import '../dados/fonte_de_dados.dart';
 import '../tema/cores.dart';
 
 class AjustesPage extends StatelessWidget {
-  const AjustesPage({super.key, required this.fonte});
+  const AjustesPage({super.key, required this.fonte, this.aoSair});
 
   final FonteDeDados fonte;
+  final VoidCallback? aoSair;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +51,21 @@ class AjustesPage extends StatelessWidget {
               titulo: 'NailsFlow',
               detalhe: 'Painel de agenda · versão de desenvolvimento',
             ),
+            if (aoSair != null) ...[
+              const SizedBox(height: 22),
+              SizedBox(
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: aoSair,
+                  icon: const Icon(Icons.logout_rounded, size: 18),
+                  label: const Text('Sair do painel'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: recusado,
+                    side: const BorderSide(color: recusadoFundo),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

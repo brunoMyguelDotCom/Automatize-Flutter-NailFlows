@@ -133,6 +133,21 @@ são dois commits.
 A branch vira um Pull Request para a `main`. Mesmo trabalhando sozinho no front, o
 PR serve de registro do que mudou e por quê.
 
+## Acesso ao painel
+
+O painel abre numa tela de login. **A autenticação ainda é provisória**: não existe
+`/login` na API, então as credenciais ficam em `lib/dados/acesso.dart` e valem só
+para desenvolvimento e demonstração.
+
+```
+e-mail: cris@nailsflow.app
+senha:  nailsflow
+```
+
+Quando a API tiver autenticação de verdade, o que muda é o corpo do método
+`Acesso.conferir`: ele passa a chamar o servidor e guardar o token. A tela de login
+e o botão de sair continuam iguais.
+
 ## Regras do domínio
 
 - Um atendimento ocupa da hora de início até o fim, calculado pela **duração do
