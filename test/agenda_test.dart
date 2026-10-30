@@ -15,6 +15,7 @@ Future<void> abrirPainel(
 
   await tester.pumpWidget(
     NailsFlowApp(
+      jaAutenticado: true,
       fonte: FonteDeDados(
         repositorio: AgendaRepositoryFalso(atraso: Duration.zero),
         descricao: 'Dados de exemplo',

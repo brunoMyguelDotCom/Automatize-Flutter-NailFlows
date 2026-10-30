@@ -8,9 +8,10 @@ import 'telas/clientes_page.dart';
 import 'telas/servicos_page.dart';
 
 class Painel extends StatefulWidget {
-  const Painel({super.key, required this.fonte});
+  const Painel({super.key, required this.fonte, this.aoSair});
 
   final FonteDeDados fonte;
+  final VoidCallback? aoSair;
 
   @override
   State<Painel> createState() => _PainelState();
@@ -33,7 +34,7 @@ class _PainelState extends State<Painel> {
       case 2:
         return ServicosPage(repositorio: widget.fonte.repositorio);
       case 3:
-        return AjustesPage(fonte: widget.fonte);
+        return AjustesPage(fonte: widget.fonte, aoSair: widget.aoSair);
       default:
         return AgendaPage(repositorio: widget.fonte.repositorio);
     }
