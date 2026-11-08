@@ -124,33 +124,48 @@ class Agendamento {
 
   factory Agendamento.fromJson(Map<String, dynamic> json) {
     final sync = json['sync_state'] as Map<String, dynamic>? ?? const {};
-
-    final servico = json['service'];
     final duracao = json['duration_minutes'] as int;
+
+    // A API manda os ids soltos (client_id, service_id) e os dados completos
+    // dentro de "client" e "service". O id da cliente só vem do lado de fora.
+    final dadosDaCliente = json['client'] as Map<String, dynamic>?;
+    final cliente = dadosDaCliente == null
+        ? Cliente(id: json['client_id'] as String?, nome: 'Cliente', email: '')
+        : Cliente.fromJson({'id': json['client_id'], ...dadosDaCliente});
+
+    final dadosDoServico = json['service'] as Map<String, dynamic>?;
+    final servico = dadosDoServico == null
+        ? Servico(
+            id: json['service_id'] as String? ?? '',
+            nome: 'Serviço',
+            duracaoMinutos: duracao,
+          )
+        : Servico.fromJson(dadosDoServico);
+
+    // Cancelar na API não apaga: o agendamento volta com active = false.
+    final situacao = json['active'] == false
+        ? SituacaoAtendimento.cancelado
+        : SituacaoAtendimento.fromJson(json['appointment_status'] as String?);
 
     return Agendamento(
       id: json['id'] as String,
-      cliente: Cliente.fromJson(json['client'] as Map<String, dynamic>),
-      servico: servico is Map<String, dynamic>
-          ? Servico.fromJson(servico)
-          : Servico(
-              id: servico.toString(),
-              nome: servico.toString(),
-              duracaoMinutos: duracao,
-            ),
-      inicio: DateTime.parse(json['start_time'] as String),
+      cliente: cliente,
+      servico: servico,
+      inicio: _dataLocal(json['start_time'] as String),
       duracaoMinutos: duracao,
       observacao: json['notes'] as String?,
-      situacao: SituacaoAtendimento.fromJson(
-        json['appointment_status'] as String?,
-      ),
+      situacao: situacao,
       statusConvite: StatusConvite.fromJson(sync['status'] as String?),
       googleEventId: sync['google_event_id'] as String?,
       ultimaSincronizacao: sync['last_synced'] == null
           ? null
-          : DateTime.parse(sync['last_synced'] as String),
+          : _dataLocal(sync['last_synced'] as String),
     );
   }
+
+  // A API guarda em UTC ("...Z"). Sem o toLocal, 16:00 de Brasília
+  // apareceria na tela como 19:00.
+  static DateTime _dataLocal(String texto) => DateTime.parse(texto).toLocal();
 
   Map<String, dynamic> toJson() {
     return {

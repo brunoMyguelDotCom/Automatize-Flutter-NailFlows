@@ -8,17 +8,28 @@ import 'package:nailsflow/dados/agenda_repository_api.dart';
 import 'package:nailsflow/dados/agenda_repository_falso.dart';
 import 'package:nailsflow/dados/fonte_de_dados.dart';
 import 'package:nailsflow/modelos/agendamento.dart';
+import 'package:nailsflow/modelos/cliente.dart';
+import 'package:nailsflow/modelos/dados_do_agendamento.dart';
+import 'package:nailsflow/modelos/servico.dart';
 
+// Formato real de GET /agendamentos/ (back em 08/11/2026).
 const String agendamentoDaApi = '''
 {
-  "client": {"name": "Maria Silva", "email": "maria@email.com", "phone": "+55 44 99812-4455"},
-  "service": "Molde F1",
-  "start_time": "2026-10-20T14:00:00",
+  "service_id": "5abb0e39-46a4-4201-8b2d-045a14452db7",
+  "start_time": "2026-10-20T17:00:00Z",
   "duration_minutes": 150,
-  "sync_state": {"google_event_id": "google_5919f34d", "status": "Pending", "last_synced": null},
   "id": "fbce9c42-8430-4ef2-bc9e-7efb9adea481",
-  "end_time": "2026-10-20T16:30:00"
+  "client_id": "c5ee7e9d-1598-44a9-87fb-d4250685f3c8",
+  "sync_state": {"google_event_id": "fbce9c4284304ef2", "status": "Pending", "last_synced": null},
+  "active": true,
+  "client": {"name": "Maria Silva", "email": "maria@email.com", "phone": "+55 44 99812-4455"},
+  "service": {"id": "5abb0e39-46a4-4201-8b2d-045a14452db7", "name": "Molde F1", "duration_minutes": 150, "active": true},
+  "end_time": "2026-10-20T19:30:00Z"
 }
+''';
+
+const String servicoDaApi = '''
+{"id": "5abb0e39-46a4-4201-8b2d-045a14452db7", "name": "Molde F1", "duration_minutes": 150, "active": true}
 ''';
 
 const String clienteDaApi = '''
@@ -36,15 +47,101 @@ void main() {
     final agendamento = Agendamento.fromJson(
       jsonDecode(agendamentoDaApi) as Map<String, dynamic>,
     );
+    final inicioEmUtc = DateTime.utc(2026, 10, 20, 17);
 
     expect(agendamento.cliente.nome, 'Maria Silva');
+    expect(agendamento.cliente.id, 'c5ee7e9d-1598-44a9-87fb-d4250685f3c8');
     expect(agendamento.servico.nome, 'Molde F1');
+    expect(agendamento.servico.id, '5abb0e39-46a4-4201-8b2d-045a14452db7');
     expect(agendamento.duracaoMinutos, 150);
-    expect(agendamento.inicio.hour, 14);
-    expect(agendamento.fim.hour, 16);
-    expect(agendamento.fim.minute, 30);
+    expect(agendamento.inicio.isUtc, isFalse);
+    expect(agendamento.inicio, inicioEmUtc.toLocal());
+    expect(
+      agendamento.fim,
+      inicioEmUtc.add(const Duration(minutes: 150)).toLocal(),
+    );
     expect(agendamento.statusConvite, StatusConvite.pendente);
     expect(agendamento.situacao, SituacaoAtendimento.agendado);
+  });
+
+  test('agendamento com active false aparece como cancelado', () {
+    final json = jsonDecode(agendamentoDaApi) as Map<String, dynamic>;
+    json['active'] = false;
+
+    expect(Agendamento.fromJson(json).situacao, SituacaoAtendimento.cancelado);
+  });
+
+  test('cria agendamento mandando so os ids', () async {
+    late Map<String, dynamic> enviado;
+    final repositorio = AgendaRepositoryApi(
+      urlBase: 'http://localhost:8000',
+      cliente: MockClient((requisicao) async {
+        enviado = jsonDecode(requisicao.body) as Map<String, dynamic>;
+        return http.Response(agendamentoDaApi, 201);
+      }),
+    );
+    final servico = Servico.fromJson(
+      jsonDecode(servicoDaApi) as Map<String, dynamic>,
+    );
+
+    await repositorio.criarAgendamento(
+      DadosDoAgendamento(
+        cliente: Cliente(
+          id: 'cli-1',
+          nome: 'Maria Silva',
+          email: 'maria@email.com',
+        ),
+        servico: servico,
+        inicio: DateTime(2026, 10, 20, 14),
+        duracaoMinutos: servico.duracaoMinutos,
+      ),
+    );
+
+    expect(enviado, {
+      'client_id': 'cli-1',
+      'service_id': '5abb0e39-46a4-4201-8b2d-045a14452db7',
+      'start_time': '2026-10-20T14:00:00.000',
+      'duration_minutes': 150,
+    });
+  });
+
+  test('lista, cria e desativa servicos na API', () async {
+    final chamadas = <String>[];
+    final repositorio = AgendaRepositoryApi(
+      urlBase: 'http://localhost:8000',
+      cliente: MockClient((requisicao) async {
+        chamadas.add('${requisicao.method} ${requisicao.url.path}');
+        if (requisicao.method == 'GET') {
+          return http.Response('[$servicoDaApi]', 200);
+        }
+        if (requisicao.method == 'DELETE') {
+          return http.Response(
+            '{"detail": "Serviço inativado com sucesso"}',
+            200,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        }
+        expect(jsonDecode(requisicao.body), {
+          'name': 'Spa dos pés',
+          'duration_minutes': 45,
+          'active': true,
+        });
+        return http.Response(servicoDaApi, 201);
+      }),
+    );
+
+    final servicos = await repositorio.listarServicos();
+    await repositorio.criarServico(
+      Servico(id: '', nome: 'Spa dos pés', duracaoMinutos: 45),
+    );
+    await repositorio.desativarServico(servicos.first.id);
+
+    expect(servicos.single.nome, 'Molde F1');
+    expect(chamadas, [
+      'GET /servicos/',
+      'POST /servicos/',
+      'DELETE /servicos/5abb0e39-46a4-4201-8b2d-045a14452db7',
+    ]);
   });
 
   test('lista agendamentos do dia mandando o filtro de data', () async {

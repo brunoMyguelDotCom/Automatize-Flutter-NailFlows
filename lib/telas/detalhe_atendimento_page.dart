@@ -43,7 +43,7 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
     if (mudou == true && mounted) Navigator.of(context).pop(true);
   }
 
-  Future<void> _excluir() async {
+  Future<void> _cancelar() async {
     final repositorio = widget.repositorio;
     if (repositorio == null) return;
 
@@ -52,8 +52,8 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
       builder: (context) => AlertDialog(
         title: const Text('Cancelar atendimento'),
         content: Text(
-          'O atendimento de ${agendamento.cliente.primeiroNome} será removido '
-          'da agenda e do calendário.',
+          'O atendimento de ${agendamento.cliente.primeiroNome} fica na agenda '
+          'como cancelado, o horário é liberado e o evento sai do Google Agenda.',
         ),
         actions: [
           TextButton(
@@ -74,7 +74,7 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
     setState(() => _processando = true);
 
     try {
-      await repositorio.excluirAgendamento(agendamento.id);
+      await repositorio.cancelarAgendamento(agendamento.id);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (erro) {
@@ -236,7 +236,10 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: podeEditar && !_processando ? _editar : null,
+                      onPressed:
+                          podeEditar && agendamento.ativo && !_processando
+                          ? _editar
+                          : null,
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Editar'),
                       style: OutlinedButton.styleFrom(
@@ -249,7 +252,10 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: podeEditar && !_processando ? _excluir : null,
+                      onPressed:
+                          podeEditar && agendamento.ativo && !_processando
+                          ? _cancelar
+                          : null,
                       icon: const Icon(Icons.event_busy_outlined, size: 18),
                       label: const Text('Cancelar'),
                       style: OutlinedButton.styleFrom(

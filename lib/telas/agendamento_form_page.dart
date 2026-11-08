@@ -94,21 +94,31 @@ class _AgendamentoFormPageState extends State<AgendamentoFormPage> {
       if (!mounted) return;
 
       final agendamento = widget.agendamento;
+
+      // Serviço desativado não entra em marcação nova, mas continua
+      // aparecendo se for o serviço do atendimento que está sendo editado.
+      final disponiveis = servicos
+          .where((s) => s.ativo || s.id == agendamento?.servico.id)
+          .toList();
+
+      // O dropdown só aceita um valor que seja um dos itens da lista,
+      // por isso a cliente e o serviço são procurados pelo id.
+      Cliente? cliente;
+      Servico? servico;
+      if (agendamento != null) {
+        cliente = clientes
+            .where((c) => c.id == agendamento.cliente.id)
+            .firstOrNull;
+        servico = disponiveis
+            .where((s) => s.id == agendamento.servico.id)
+            .firstOrNull;
+      }
+
       setState(() {
         _clientes = clientes;
-        _servicos = servicos;
-        _cliente = agendamento == null
-            ? null
-            : clientes.firstWhere(
-                (c) => c.email == agendamento.cliente.email,
-                orElse: () => agendamento.cliente,
-              );
-        _servico = agendamento == null
-            ? null
-            : servicos.firstWhere(
-                (s) => s.nome == agendamento.servico.nome,
-                orElse: () => agendamento.servico,
-              );
+        _servicos = disponiveis;
+        _cliente = cliente;
+        _servico = servico;
         _carregando = false;
       });
     } catch (erro) {

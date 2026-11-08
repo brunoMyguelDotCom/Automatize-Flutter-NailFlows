@@ -5,6 +5,7 @@ import 'package:nailsflow/dados/fonte_de_dados.dart';
 import 'package:nailsflow/main.dart';
 import 'package:nailsflow/modelos/cliente.dart';
 import 'package:nailsflow/modelos/servico.dart';
+import 'package:nailsflow/util/datas.dart';
 import 'package:nailsflow/widgets/cartao_atendimento.dart';
 
 Future<void> abrirPainel(
@@ -31,7 +32,14 @@ Future<void> abrirPainel(
 }
 
 Future<void> irParaAmanha(WidgetTester tester) async {
-  final amanha = DateTime.now().add(const Duration(days: 1));
+  final hoje = DateTime.now();
+  final amanha = hoje.add(const Duration(days: 1));
+  // No domingo, amanhã já está na faixa da semana seguinte.
+  final estaNaSemana = semanaDe(hoje).any((dia) => dia.day == amanha.day);
+  if (!estaNaSemana) {
+    await tester.tap(find.byTooltip('Próxima semana'));
+    await tester.pumpAndSettle();
+  }
   await tester.tap(find.text('${amanha.day}').last);
   await tester.pumpAndSettle();
 }
@@ -104,15 +112,17 @@ void main() {
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('será removido'), findsOneWidget);
+    expect(find.textContaining('fica na agenda'), findsOneWidget);
     await tester.tap(find.text('Cancelar atendimento').last);
     await tester.pumpAndSettle();
 
-    expect(find.byType(CartaoAtendimento), findsNWidgets(antes - 1));
-    expect(find.text('Maria Silva'), findsNothing);
+    // O atendimento continua na agenda, só que marcado como cancelado.
+    expect(find.byType(CartaoAtendimento), findsNWidgets(antes));
+    expect(find.text('Maria Silva'), findsOneWidget);
+    expect(find.text('Cancelado'), findsOneWidget);
   });
 
-  testWidgets('cadastra e exclui um servico', (tester) async {
+  testWidgets('cadastra e desativa um servico', (tester) async {
     await abrirPainel(tester);
     await tester.tap(find.text('Serviços').last);
     await tester.pumpAndSettle();
@@ -135,11 +145,22 @@ void main() {
 
     await tester.tap(find.text('Spa dos pés'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Excluir serviço'));
+    await tester.tap(find.text('Desativar serviço'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Excluir').last);
+    await tester.tap(find.text('Desativar').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Spa dos pés'), findsNothing);
+    expect(find.text('Spa dos pés'), findsOneWidget);
+    expect(
+      find.text('Desativado · não aparece nas novas marcações'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Spa dos pés'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reativar serviço'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Duração de 45min'), findsOneWidget);
   });
 }

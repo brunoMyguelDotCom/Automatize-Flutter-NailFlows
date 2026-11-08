@@ -18,14 +18,12 @@ class DadosDoAgendamento {
 
   DateTime get fim => inicio.add(Duration(minutes: duracaoMinutos));
 
+  // A API recebe só os ids e busca cliente e serviço no banco.
+  // O horário vai sem fuso: o back entende como horário de Brasília.
   Map<String, dynamic> toJson() {
     return {
-      'client': {
-        'name': cliente.nome,
-        'email': cliente.email,
-        'phone': cliente.telefone,
-      },
-      'service': servico.nome,
+      'client_id': cliente.id,
+      'service_id': servico.id,
       'start_time': _semFuso(inicio),
       'duration_minutes': duracaoMinutos,
     };

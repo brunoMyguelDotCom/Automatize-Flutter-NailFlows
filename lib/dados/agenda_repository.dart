@@ -13,7 +13,9 @@ abstract class AgendaRepository {
 
   Future<Agendamento> atualizarAgendamento(String id, DadosDoAgendamento dados);
 
-  Future<void> excluirAgendamento(String id);
+  /// Cancela sem apagar: o atendimento continua na agenda, marcado como
+  /// cancelado.
+  Future<void> cancelarAgendamento(String id);
 
   Future<List<Servico>> listarServicos();
 
@@ -21,7 +23,8 @@ abstract class AgendaRepository {
 
   Future<Servico> atualizarServico(String id, Servico servico);
 
-  Future<void> excluirServico(String id);
+  /// Tira o serviço das novas marcações, mas mantém no histórico.
+  Future<void> desativarServico(String id);
 
   Future<List<Cliente>> listarClientes();
 
