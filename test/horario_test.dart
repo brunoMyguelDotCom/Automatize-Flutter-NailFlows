@@ -11,6 +11,7 @@ Future<void> abrirFormulario(WidgetTester tester) async {
 
   await tester.pumpWidget(
     NailsFlowApp(
+      jaAutenticado: true,
       fonte: FonteDeDados(
         repositorio: AgendaRepositoryFalso(
           atraso: Duration.zero,
