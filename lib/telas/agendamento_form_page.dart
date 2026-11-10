@@ -188,12 +188,39 @@ class _AgendamentoFormPageState extends State<AgendamentoFormPage> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (erro) {
+      final mensagem = await _explicarErro(erro);
       if (!mounted) return;
       setState(() {
-        _erro = erro.toString();
+        _erro = mensagem;
         _salvando = false;
       });
     }
+  }
+
+  // A API avisa o conflito de horário com o id do outro agendamento,
+  // por exemplo "(ID: 640b4f3d-...)". Para a profissional, o id não diz nada,
+  // então o painel procura esse atendimento no dia e mostra quem e quando.
+  static final RegExp _idDoConflito = RegExp(r'ID: ([^)\s]+)');
+
+  Future<String> _explicarErro(Object erro) async {
+    final texto = erro.toString();
+    final achado = _idDoConflito.firstMatch(texto);
+    if (achado == null) return texto;
+
+    try {
+      final doDia = await widget.repositorio.listarAgendamentos(
+        inicio: inicioDoDia(_dia),
+        fim: fimDoDia(_dia),
+      );
+      final outro = doDia.where((a) => a.id == achado.group(1)).firstOrNull;
+      if (outro != null) {
+        return 'Já existe atendimento de ${outro.cliente.primeiroNome} '
+            'das ${hora(outro.inicio)} às ${hora(outro.fim)}.';
+      }
+    } catch (_) {
+      // sem conseguir buscar, cai na mensagem genérica abaixo
+    }
+    return 'Esse horário coincide com outro atendimento.';
   }
 
   @override
