@@ -10,6 +10,7 @@ import 'dados/autenticacao.dart';
 import 'dados/cadastro_por_convite.dart';
 import 'dados/fonte_de_dados.dart';
 import 'telas/cadastro_cliente_page.dart';
+import 'telas/inicio_page.dart';
 import 'tema/tema.dart';
 import 'telas/login_page.dart';
 
@@ -36,8 +37,9 @@ Future<void> main() async {
     publishableKey: ApiConfig.supabaseChave,
   );
 
-  final fonte = await escolherFonteDeDados();
-  runApp(NailsFlowApp(fonte: fonte, autenticacao: AutenticacaoSupabase()));
+  // A tela inicial procura a API (e espera ela acordar, se for a publicada)
+  // antes de abrir o login.
+  runApp(InicioDoPainel(autenticacao: AutenticacaoSupabase()));
 }
 
 class NailsFlowApp extends StatefulWidget {
