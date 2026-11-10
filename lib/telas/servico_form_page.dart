@@ -57,6 +57,7 @@ class _ServicoFormPageState extends State<ServicoFormPage> {
       id: widget.servico?.id ?? '',
       nome: _nome.text.trim(),
       duracaoMinutos: _minutos,
+      ativo: widget.servico?.ativo ?? true,
     );
 
     try {
@@ -76,12 +77,15 @@ class _ServicoFormPageState extends State<ServicoFormPage> {
     }
   }
 
-  Future<void> _excluir() async {
+  Future<void> _desativar() async {
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir serviço'),
-        content: Text('Tirar ${widget.servico!.nome} do catálogo?'),
+        title: const Text('Desativar serviço'),
+        content: Text(
+          '${widget.servico!.nome} sai das novas marcações, '
+          'mas continua nos atendimentos antigos.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -90,7 +94,7 @@ class _ServicoFormPageState extends State<ServicoFormPage> {
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(backgroundColor: recusado),
-            child: const Text('Excluir'),
+            child: const Text('Desativar'),
           ),
         ],
       ),
@@ -98,13 +102,33 @@ class _ServicoFormPageState extends State<ServicoFormPage> {
 
     if (confirmou != true) return;
 
+    await _executar(
+      () => widget.repositorio.desativarServico(widget.servico!.id),
+    );
+  }
+
+  Future<void> _reativar() async {
+    final servico = widget.servico!;
+    await _executar(
+      () => widget.repositorio.atualizarServico(
+        servico.id,
+        Servico(
+          id: servico.id,
+          nome: servico.nome,
+          duracaoMinutos: servico.duracaoMinutos,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _executar(Future<void> Function() acao) async {
     setState(() {
       _salvando = true;
       _erro = null;
     });
 
     try {
-      await widget.repositorio.excluirServico(widget.servico!.id);
+      await acao();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (erro) {
@@ -215,13 +239,22 @@ class _ServicoFormPageState extends State<ServicoFormPage> {
                     ),
                   ),
                 ),
-                if (widget.ehEdicao) ...[
+                if (widget.ehEdicao && widget.servico!.ativo) ...[
                   const SizedBox(height: 12),
                   TextButton.icon(
-                    onPressed: _salvando ? null : _excluir,
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    label: const Text('Excluir serviço'),
+                    onPressed: _salvando ? null : _desativar,
+                    icon: const Icon(Icons.block_rounded, size: 18),
+                    label: const Text('Desativar serviço'),
                     style: TextButton.styleFrom(foregroundColor: recusado),
+                  ),
+                ],
+                if (widget.ehEdicao && !widget.servico!.ativo) ...[
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: _salvando ? null : _reativar,
+                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                    label: const Text('Reativar serviço'),
+                    style: TextButton.styleFrom(foregroundColor: vinho),
                   ),
                 ],
               ],

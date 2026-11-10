@@ -7,7 +7,6 @@ import '../modelos/cliente.dart';
 import '../modelos/dados_do_agendamento.dart';
 import '../modelos/servico.dart';
 import 'agenda_repository.dart';
-import 'agenda_repository_falso.dart';
 import 'api_config.dart';
 
 class FalhaDaApi implements Exception {
@@ -128,33 +127,54 @@ class AgendaRepositoryApi implements AgendaRepository {
   }
 
   @override
-  Future<void> excluirAgendamento(String id) async {
+  Future<void> cancelarAgendamento(String id) async {
+    // O DELETE da API só marca active = false e apaga o evento do Google.
     await _enviar('DELETE', _url('/agendamentos/$id'), null);
   }
 
   @override
   Future<List<Servico>> listarServicos() async {
-    return AgendaRepositoryFalso.catalogo;
+    final corpo = await _buscar(_url('/servicos/'));
+
+    final lista = (corpo as List)
+        .map((item) => Servico.fromJson(item as Map<String, dynamic>))
+        .toList();
+    lista.sort((a, b) => a.nome.compareTo(b.nome));
+    return lista;
   }
 
   @override
   Future<Servico> criarServico(Servico servico) async {
-    throw FalhaDaApi(_semCadastroDeServicos);
+    final corpo = await _enviar(
+      'POST',
+      _url('/servicos/'),
+      _corpoDoServico(servico),
+    );
+    return Servico.fromJson(corpo as Map<String, dynamic>);
   }
 
   @override
   Future<Servico> atualizarServico(String id, Servico servico) async {
-    throw FalhaDaApi(_semCadastroDeServicos);
+    final corpo = await _enviar(
+      'PATCH',
+      _url('/servicos/$id'),
+      _corpoDoServico(servico),
+    );
+    return Servico.fromJson(corpo as Map<String, dynamic>);
   }
 
   @override
-  Future<void> excluirServico(String id) async {
-    throw FalhaDaApi(_semCadastroDeServicos);
+  Future<void> desativarServico(String id) async {
+    await _enviar('DELETE', _url('/servicos/$id'), null);
   }
 
-  static const String _semCadastroDeServicos =
-      'O servidor ainda não tem cadastro de serviços. '
-      'A lista exibida é fixa no aplicativo.';
+  Map<String, dynamic> _corpoDoServico(Servico servico) {
+    return {
+      'name': servico.nome,
+      'duration_minutes': servico.duracaoMinutos,
+      'active': servico.ativo,
+    };
+  }
 
   @override
   Future<Cliente> criarCliente(Cliente cliente) async {

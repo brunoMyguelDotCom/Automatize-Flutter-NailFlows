@@ -94,21 +94,31 @@ class _AgendamentoFormPageState extends State<AgendamentoFormPage> {
       if (!mounted) return;
 
       final agendamento = widget.agendamento;
+
+      // Serviço desativado não entra em marcação nova, mas continua
+      // aparecendo se for o serviço do atendimento que está sendo editado.
+      final disponiveis = servicos
+          .where((s) => s.ativo || s.id == agendamento?.servico.id)
+          .toList();
+
+      // O dropdown só aceita um valor que seja um dos itens da lista,
+      // por isso a cliente e o serviço são procurados pelo id.
+      Cliente? cliente;
+      Servico? servico;
+      if (agendamento != null) {
+        cliente = clientes
+            .where((c) => c.id == agendamento.cliente.id)
+            .firstOrNull;
+        servico = disponiveis
+            .where((s) => s.id == agendamento.servico.id)
+            .firstOrNull;
+      }
+
       setState(() {
         _clientes = clientes;
-        _servicos = servicos;
-        _cliente = agendamento == null
-            ? null
-            : clientes.firstWhere(
-                (c) => c.email == agendamento.cliente.email,
-                orElse: () => agendamento.cliente,
-              );
-        _servico = agendamento == null
-            ? null
-            : servicos.firstWhere(
-                (s) => s.nome == agendamento.servico.nome,
-                orElse: () => agendamento.servico,
-              );
+        _servicos = disponiveis;
+        _cliente = cliente;
+        _servico = servico;
         _carregando = false;
       });
     } catch (erro) {
@@ -178,12 +188,39 @@ class _AgendamentoFormPageState extends State<AgendamentoFormPage> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (erro) {
+      final mensagem = await _explicarErro(erro);
       if (!mounted) return;
       setState(() {
-        _erro = erro.toString();
+        _erro = mensagem;
         _salvando = false;
       });
     }
+  }
+
+  // A API avisa o conflito de horário com o id do outro agendamento,
+  // por exemplo "(ID: 640b4f3d-...)". Para a profissional, o id não diz nada,
+  // então o painel procura esse atendimento no dia e mostra quem e quando.
+  static final RegExp _idDoConflito = RegExp(r'ID: ([^)\s]+)');
+
+  Future<String> _explicarErro(Object erro) async {
+    final texto = erro.toString();
+    final achado = _idDoConflito.firstMatch(texto);
+    if (achado == null) return texto;
+
+    try {
+      final doDia = await widget.repositorio.listarAgendamentos(
+        inicio: inicioDoDia(_dia),
+        fim: fimDoDia(_dia),
+      );
+      final outro = doDia.where((a) => a.id == achado.group(1)).firstOrNull;
+      if (outro != null) {
+        return 'Já existe atendimento de ${outro.cliente.primeiroNome} '
+            'das ${hora(outro.inicio)} às ${hora(outro.fim)}.';
+      }
+    } catch (_) {
+      // sem conseguir buscar, cai na mensagem genérica abaixo
+    }
+    return 'Esse horário coincide com outro atendimento.';
   }
 
   @override

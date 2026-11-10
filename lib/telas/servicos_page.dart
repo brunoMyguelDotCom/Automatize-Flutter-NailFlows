@@ -36,6 +36,11 @@ class _ServicosPageState extends State<ServicosPage> {
 
     try {
       final lista = await widget.repositorio.listarServicos();
+      // Ativos primeiro; os desativados ficam no fim da lista.
+      lista.sort((a, b) {
+        if (a.ativo != b.ativo) return a.ativo ? -1 : 1;
+        return a.nome.compareTo(b.nome);
+      });
       if (!mounted) return;
       setState(() {
         _servicos = lista;
@@ -165,7 +170,9 @@ class _ServicosPageState extends State<ServicosPage> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'Duração de ${duracaoPorExtenso(servico.duracaoMinutos)}',
+                          servico.ativo
+                              ? 'Duração de ${duracaoPorExtenso(servico.duracaoMinutos)}'
+                              : 'Desativado · não aparece nas novas marcações',
                           style: const TextStyle(
                             fontSize: 13,
                             color: textoApoio,

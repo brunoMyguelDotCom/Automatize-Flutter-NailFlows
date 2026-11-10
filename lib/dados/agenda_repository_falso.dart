@@ -242,9 +242,17 @@ class AgendaRepositoryFalso implements AgendaRepository {
   }
 
   @override
-  Future<void> excluirServico(String id) async {
+  Future<void> desativarServico(String id) async {
     await Future.delayed(atraso);
-    _servicos.removeWhere((s) => s.id == id);
+    final posicao = _servicos.indexWhere((s) => s.id == id);
+    if (posicao == -1) return;
+    final servico = _servicos[posicao];
+    _servicos[posicao] = Servico(
+      id: servico.id,
+      nome: servico.nome,
+      duracaoMinutos: servico.duracaoMinutos,
+      ativo: false,
+    );
   }
 
   void _validar(DadosDoAgendamento dados, {String? ignorandoId}) {
@@ -312,9 +320,21 @@ class AgendaRepositoryFalso implements AgendaRepository {
   }
 
   @override
-  Future<void> excluirAgendamento(String id) async {
+  Future<void> cancelarAgendamento(String id) async {
     await Future.delayed(atraso);
-    _agendamentos.removeWhere((a) => a.id == id);
+    final posicao = _agendamentos.indexWhere((a) => a.id == id);
+    if (posicao == -1) return;
+    final anterior = _agendamentos[posicao];
+    _agendamentos[posicao] = Agendamento(
+      id: anterior.id,
+      cliente: anterior.cliente,
+      servico: anterior.servico,
+      inicio: anterior.inicio,
+      duracaoMinutos: anterior.duracaoMinutos,
+      observacao: anterior.observacao,
+      situacao: SituacaoAtendimento.cancelado,
+      statusConvite: anterior.statusConvite,
+    );
   }
 
   @override
