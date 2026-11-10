@@ -8,6 +8,7 @@ import '../util/datas.dart';
 import '../util/telefone.dart';
 import '../widgets/etiqueta.dart';
 import 'agendamento_form_page.dart';
+import 'aviso_whatsapp_page.dart';
 
 class DetalheAtendimentoPage extends StatefulWidget {
   const DetalheAtendimentoPage({
@@ -269,9 +270,9 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
-                onPressed: () => _emBreve('Avisar pelo WhatsApp'),
+                onPressed: agendamento.ativo ? _avisarPeloWhatsapp : null,
                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                label: const Text('Avisar a cliente'),
+                label: const Text('Mandar lembrete no WhatsApp'),
                 style: FilledButton.styleFrom(
                   backgroundColor: vinho,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -284,11 +285,10 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
     );
   }
 
-  void _emBreve(String acao) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$acao: ainda não implementado'),
-        backgroundColor: vinhoEscuro,
+  void _avisarPeloWhatsapp() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => AvisoWhatsappPage(agendamento: agendamento),
       ),
     );
   }
