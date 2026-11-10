@@ -26,4 +26,10 @@ class ApiConfig {
   );
 
   static const Duration tempoDeEspera = Duration(seconds: 3);
+
+  /// API publicada (HTTPS, como no Render). Lá ela dorme quando ninguém usa
+  /// e a primeira chamada pode levar quase um minuto para responder.
+  static bool get publicada => urlBase.startsWith('https://');
+
+  static const Duration esperaParaAcordar = Duration(seconds: 75);
 }

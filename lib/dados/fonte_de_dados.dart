@@ -14,7 +14,17 @@ class FonteDeDados {
   bool get ehApi => repositorio is AgendaRepositoryApi;
 }
 
-Future<FonteDeDados> escolherFonteDeDados({http.Client? cliente}) async {
+/// A API publicada não respondeu nem depois de esperar ela acordar.
+class ServidorForaDoAr implements Exception {
+  @override
+  String toString() =>
+      'O servidor não respondeu. Confira a internet e tente de novo.';
+}
+
+Future<FonteDeDados> escolherFonteDeDados({
+  http.Client? cliente,
+  bool? publicada,
+}) async {
   if (!ApiConfig.tentarApi) {
     return FonteDeDados(
       repositorio: AgendaRepositoryFalso(),
@@ -23,6 +33,18 @@ Future<FonteDeDados> escolherFonteDeDados({http.Client? cliente}) async {
   }
 
   final api = AgendaRepositoryApi(cliente: cliente);
+
+  // No site publicado, cair nos dados de exemplo mostraria uma agenda falsa
+  // para a Cris. Então espera a API acordar e, se mesmo assim falhar, avisa.
+  if (publicada ?? ApiConfig.publicada) {
+    if (await api.estaNoAr(espera: ApiConfig.esperaParaAcordar)) {
+      return FonteDeDados(
+        repositorio: api,
+        descricao: 'API em ${ApiConfig.urlBase}',
+      );
+    }
+    throw ServidorForaDoAr();
+  }
 
   if (await api.estaNoAr()) {
     return FonteDeDados(

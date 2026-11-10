@@ -41,11 +41,11 @@ class AgendaRepositoryApi implements AgendaRepository {
     return Uri.parse('$urlBase$caminho').replace(queryParameters: parametros);
   }
 
-  Future<bool> estaNoAr() async {
+  Future<bool> estaNoAr({Duration? espera}) async {
     try {
       final resposta = await _cliente
           .get(_url('/'))
-          .timeout(ApiConfig.tempoDeEspera);
+          .timeout(espera ?? ApiConfig.tempoDeEspera);
       return resposta.statusCode < 500;
     } catch (_) {
       return false;
