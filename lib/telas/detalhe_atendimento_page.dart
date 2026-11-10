@@ -53,7 +53,7 @@ class _DetalheAtendimentoPageState extends State<DetalheAtendimentoPage> {
         title: const Text('Cancelar atendimento'),
         content: Text(
           'O atendimento de ${agendamento.cliente.primeiroNome} fica na agenda '
-          'como cancelado, o horário é liberado e o evento sai do Google Agenda.',
+          'como cancelado e o evento sai do Google Agenda.',
         ),
         actions: [
           TextButton(
