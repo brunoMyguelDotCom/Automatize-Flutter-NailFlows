@@ -41,6 +41,32 @@ flutter run -d chrome --dart-define=API_URL=http://127.0.0.1:8001
 flutter run -d chrome --dart-define=USAR_API=false
 ```
 
+Desde que o back passou a exigir autenticação administrativa, clientes,
+agendamentos, serviços e a geração de links de cadastro precisam do mesmo valor
+de `ADMIN_API_TOKEN` configurado no `.env` da API:
+
+```bash
+flutter run -d chrome --dart-define=ADMIN_TOKEN=valor_do_ADMIN_API_TOKEN
+```
+
+O token fica dentro do JavaScript gerado, então serve para rodar localmente e
+na apresentação. Para publicar, o painel precisa de login de verdade.
+
+### Link de cadastro da cliente
+
+Em **Clientes → Link de cadastro**, o painel gera um convite na API (vale 6 horas
+e serve para um cadastro só) e deixa copiar ou mandar no WhatsApp. A cliente abre
+o link, preenche nome, WhatsApp e e-mail, e aparece na lista de clientes.
+
+O link é montado pela API com o `FRONTEND_URL` do `.env` dela. Para abrir direto
+no painel Flutter, use o endereço do painel seguido de `#`:
+
+```env
+FRONTEND_URL=http://localhost:5050/#
+```
+
+Assim o link fica `http://localhost:5050/#/cadastro/<token>`.
+
 ### Rodando em outra máquina
 
 O projeto exige **Dart 3.8 ou superior** (Flutter 3.32+). Se o `flutter pub get`
