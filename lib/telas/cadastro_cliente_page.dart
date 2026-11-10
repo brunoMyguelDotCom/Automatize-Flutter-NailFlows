@@ -35,7 +35,19 @@ class CadastroClienteApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: temaNailsFlow(),
-      home: CadastroClientePage(token: token, convites: convites),
+      // Com "home", o Flutter troca o endereço para /#/ e o token some: se a
+      // cliente atualizasse a página, cairia no login do painel. Abrindo a
+      // tela com o nome da rota original, o endereço continua com o token.
+      onGenerateInitialRoutes: (rota) => [_rota(rota)],
+      onGenerateRoute: (configuracao) => _rota(configuracao.name),
+    );
+  }
+
+  Route<void> _rota(String? nome) {
+    return MaterialPageRoute<void>(
+      settings: RouteSettings(name: nome),
+      builder: (context) =>
+          CadastroClientePage(token: token, convites: convites),
     );
   }
 }
