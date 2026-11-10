@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../dados/agenda_repository.dart';
+import '../dados/agenda_repository_api.dart';
+import '../dados/cadastro_por_convite.dart';
 import '../modelos/cliente.dart';
 import '../tema/cores.dart';
 import '../util/telefone.dart';
@@ -8,11 +10,15 @@ import '../widgets/avatar_cliente.dart';
 import '../widgets/estado_vazio.dart';
 import 'cliente_form_page.dart';
 import 'cliente_historico_page.dart';
+import 'link_de_cadastro_dialog.dart';
 
 class ClientesPage extends StatefulWidget {
-  const ClientesPage({super.key, required this.repositorio});
+  const ClientesPage({super.key, required this.repositorio, this.convites});
 
   final AgendaRepository repositorio;
+
+  /// Usado nos testes; no app, vem da API configurada.
+  final CadastroPorConvite? convites;
 
   @override
   State<ClientesPage> createState() => _ClientesPageState();
@@ -87,6 +93,21 @@ class _ClientesPageState extends State<ClientesPage> {
     }
   }
 
+  // O convite só existe na API; com os dados de exemplo o botão nem aparece.
+  bool get _temConvite =>
+      widget.convites != null || widget.repositorio is AgendaRepositoryApi;
+
+  Future<void> _gerarLinkDeCadastro() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => LinkDeCadastroDialog(
+        convites: widget.convites ?? CadastroPorConvite(),
+      ),
+    );
+    // A cliente pode ter se cadastrado enquanto a janela estava aberta.
+    if (mounted) await _carregar();
+  }
+
   void _abrirHistorico(Cliente cliente) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -113,18 +134,45 @@ class _ClientesPageState extends State<ClientesPage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: TextField(
-              controller: _buscaController,
-              onChanged: (valor) => setState(() => _busca = valor),
-              decoration: InputDecoration(
-                hintText: 'Buscar cliente',
-                prefixIcon: const Icon(Icons.search_rounded, color: textoApoio),
-                filled: true,
-                fillColor: superficie,
-                border: _borda(linha),
-                enabledBorder: _borda(linha),
-                focusedBorder: _borda(vinho),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _buscaController,
+                    onChanged: (valor) => setState(() => _busca = valor),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar cliente',
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: textoApoio,
+                      ),
+                      filled: true,
+                      fillColor: superficie,
+                      border: _borda(linha),
+                      enabledBorder: _borda(linha),
+                      focusedBorder: _borda(vinho),
+                    ),
+                  ),
+                ),
+                if (_temConvite) ...[
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _gerarLinkDeCadastro,
+                      icon: const Icon(Icons.link_rounded, size: 18),
+                      label: const Text('Link de cadastro'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: vinho,
+                        side: const BorderSide(color: rosa),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           Expanded(child: _corpo()),

@@ -19,12 +19,23 @@ class FalhaDaApi implements Exception {
 }
 
 class AgendaRepositoryApi implements AgendaRepository {
-  AgendaRepositoryApi({String? urlBase, http.Client? cliente})
-    : urlBase = urlBase ?? ApiConfig.urlBase,
-      _cliente = cliente ?? http.Client();
+  AgendaRepositoryApi({
+    String? urlBase,
+    http.Client? cliente,
+    String? tokenAdmin,
+  }) : urlBase = urlBase ?? ApiConfig.urlBase,
+       tokenAdmin = tokenAdmin ?? ApiConfig.tokenAdmin,
+       _cliente = cliente ?? http.Client();
 
   final String urlBase;
+  final String tokenAdmin;
   final http.Client _cliente;
+
+  // Desde o PR #8 do back, clientes, agendamentos e serviços só respondem
+  // com o token de administrador no cabeçalho.
+  Map<String, String> get _cabecalhos => {
+    if (tokenAdmin.isNotEmpty) 'Authorization': 'Bearer $tokenAdmin',
+  };
 
   Uri _url(String caminho, [Map<String, String>? parametros]) {
     return Uri.parse('$urlBase$caminho').replace(queryParameters: parametros);
@@ -44,7 +55,7 @@ class AgendaRepositoryApi implements AgendaRepository {
   Future<dynamic> _buscar(Uri url) async {
     final http.Response resposta;
     try {
-      resposta = await _cliente.get(url);
+      resposta = await _cliente.get(url, headers: _cabecalhos);
     } catch (_) {
       throw FalhaDaApi('Não consegui falar com o servidor.');
     }
@@ -216,6 +227,7 @@ class AgendaRepositoryApi implements AgendaRepository {
   ) async {
     final requisicao = http.Request(metodo, url);
     requisicao.headers['Content-Type'] = 'application/json; charset=utf-8';
+    requisicao.headers.addAll(_cabecalhos);
     if (corpo != null) requisicao.body = jsonEncode(corpo);
 
     final http.Response resposta;
