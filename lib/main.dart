@@ -2,12 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app.dart';
+import 'dados/cadastro_por_convite.dart';
 import 'dados/fonte_de_dados.dart';
+import 'telas/cadastro_cliente_page.dart';
 import 'tema/tema.dart';
 import 'telas/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Link de cadastro (painel/#/cadastro/<token>): abre só o formulário da
+  // cliente, sem login e sem o resto do painel.
+  final tokenDoCadastro = tokenDoLinkDeCadastro(Uri.base);
+  if (tokenDoCadastro != null) {
+    runApp(
+      CadastroClienteApp(
+        token: tokenDoCadastro,
+        convites: CadastroPorConvite(),
+      ),
+    );
+    return;
+  }
+
   final fonte = await escolherFonteDeDados();
   runApp(NailsFlowApp(fonte: fonte));
 }
