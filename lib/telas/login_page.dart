@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../dados/acesso.dart';
+import '../dados/autenticacao.dart';
 import '../tema/cores.dart';
 import '../tema/tema.dart';
 import '../widgets/campo_formulario.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, required this.aoEntrar});
+  const LoginPage({super.key, required this.aoEntrar, this.autenticacao});
 
   final VoidCallback aoEntrar;
+
+  /// Login do Supabase. Sem ele (só em teste), não há como entrar.
+  final Autenticacao? autenticacao;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -38,18 +41,27 @@ class _LoginPageState extends State<LoginPage> {
       _erro = null;
     });
 
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-
-    if (Acesso.conferir(_email.text, _senha.text)) {
-      widget.aoEntrar();
+    final autenticacao = widget.autenticacao;
+    if (autenticacao == null) {
+      setState(() {
+        _entrando = false;
+        _erro = 'Login indisponível.';
+      });
       return;
     }
 
-    setState(() {
-      _entrando = false;
-      _erro = 'E-mail ou senha incorretos.';
-    });
+    try {
+      // O Supabase confere e-mail e senha do usuário criado no projeto.
+      await autenticacao.entrar(_email.text, _senha.text);
+      if (!mounted) return;
+      widget.aoEntrar();
+    } on FalhaNoLogin catch (falha) {
+      if (!mounted) return;
+      setState(() {
+        _entrando = false;
+        _erro = falha.mensagem;
+      });
+    }
   }
 
   @override
@@ -216,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Acesso provisório, enquanto a API não tem autenticação',
+                    'Acesso com o usuário do painel cadastrado no Supabase',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
