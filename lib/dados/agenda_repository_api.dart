@@ -13,6 +13,7 @@ class FalhaDaApi implements Exception {
   FalhaDaApi(this.mensagem);
 
   final String mensagem;
+  
 
   @override
   String toString() => mensagem;
